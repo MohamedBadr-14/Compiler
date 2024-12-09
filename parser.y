@@ -34,6 +34,7 @@ int yyerror(char *s);
 %token DEC
 %token <op> EQU
 %token ADD_EQ SUB_EQ MULT_EQ DIV_EQ
+%token IF ELSE FOR WHILE
 
 %type <ival> expression assign_expression
 %type<op> assign_operation
@@ -48,11 +49,27 @@ int yyerror(char *s);
 program:
         program statement '\n'
         | statement 
+        | ifstatement
+        | forloop
+        | whileloop
         ;
 
 statement:
         declaration
         
+        ;
+
+ifstatement:
+        IF '(' expression ')' '{' statement '}' { printf("If condition evaluated: %d\n", $3); }
+        | IF '(' expression ')' '{' statement '}' ELSE '{' statement '}' { printf("If condition evaluated: %d\n", $3); }
+        ;
+
+forloop:
+        FOR '(' expression SEMICOLON expression SEMICOLON expression ')' '{' statement '}'
+        ;
+
+whileloop:
+        WHILE '(' expression ')' '{' statement '}'
         ;
 
 declaration:

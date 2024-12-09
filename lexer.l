@@ -76,9 +76,13 @@ IDENTIFIER          (_|{LETTER})({LETTER}|{DIGIT}|_)*
 
     /* Reserved Words */
 
-"const"                     { return CONST;}
+"const"                     { return CONST; }
+"if"                        { return IF; }
+"else"                      { return ELSE; }
+"for"                       { return FOR; }
+"while"                     { return WHILE; }
 
-";"                         { /*yylval.semi=strdup(yytext);*/ return SEMICOLON;}
+";"                         { return SEMICOLON; }
 
     /* DataTypes and likes */
 "void"                     {strcpy(currentType, yytext); return  VOID;}
