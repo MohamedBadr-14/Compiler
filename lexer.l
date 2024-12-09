@@ -3,9 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-
-
 #include "y.tab.h"
+
 int multiline_comment_start = 0;
 char currentType[32];
 char currentID[32];
@@ -36,7 +35,7 @@ IDENTIFIER          (_|{LETTER})({LETTER}|{DIGIT}|_)*
 
 %%
     /* Operators */
-[[\-+*/<>}:|&!^%\]]    { return *yytext;}
+[\-\+\*/<>}:|&!^%] { return *yytext; }
 
 "+="                         {
                                 

@@ -78,12 +78,12 @@ expression:
 ;
 
 data_type:
-        INT_TYPE
-      | DOUBLE_TYPE
-      | BOOL_TYPE
-      | CHAR_TYPE
-      | STRING_TYPE
-      | VOID
+        INT_TYPE                { $$ = "int"; }
+      | DOUBLE_TYPE             { $$ = "double"; }
+      | BOOL_TYPE               { $$ = "bool"; }
+      | CHAR_TYPE               { $$ = "char"; }
+      | STRING_TYPE             { $$ = "string"; }
+      | VOID                    { $$ = NULL; }
       ;
 
 unary_expression:
@@ -94,11 +94,11 @@ unary_expression:
       ;
 
 assign_operation:
-        EQU        
-      | ADD_EQ            
-      | SUB_EQ            
-      | MULT_EQ
-      | DIV_EQ
+        EQU             { $$ = "="; }
+      | ADD_EQ          { $$ = "+="; }  
+      | SUB_EQ          { $$ = "-="; }  
+      | MULT_EQ         { $$ = "*="; }
+      | DIV_EQ          { $$ = "/="; }
       ;
 
 assign_expression:
