@@ -36,7 +36,24 @@ IDENTIFIER          (_|{LETTER})({LETTER}|{DIGIT}|_)*
 
 %%
     /* Operators */
-[[\-+*/<>}:|&!^%\]]    { return *yytext;}
+"+"    { return PLUS; }
+"-"    { return MINUS; }
+"*"    { return MULT; }
+"/"    { return DIV; }
+    /*UNKNOWNS */
+"\\"     { return UNKNOWN; }
+"%"     { return UNKNOWN; }
+"^"     { return UNKNOWN; }
+":"     { return UNKNOWN; }
+"|"     { return UNKNOWN; }
+"&"     { return UNKNOWN; }
+"~"     { return UNKNOWN; }
+"<<"    { return UNKNOWN; }
+">>"    { return UNKNOWN; }
+"?"     { return UNKNOWN; }
+","     { return UNKNOWN; }
+"<>"    { return UNKNOWN; }
+
 
 "+="                         {
                                 
@@ -74,10 +91,73 @@ IDENTIFIER          (_|{LETTER})({LETTER}|{DIGIT}|_)*
                                 return EQU;
                             }
 
+"<"                        {
+                                
+                                yylval.op = strdup(yytext);
+                                return LT;
+                            }
+">"                        {
+                                
+                                yylval.op = strdup(yytext);
+                                return GT;
+                            }
+"<="                        {
+                                
+                                yylval.op = strdup(yytext);
+                                return LTE;
+                            }
+">="                        {
+                                
+                                yylval.op = strdup(yytext);
+                                return GTE;
+                            }
+"=="                        {
+                                
+                                yylval.op = strdup(yytext);
+                                return EQ;
+                            }
+"!="                        {
+                                
+                                yylval.op = strdup(yytext);
+                                return NEQ;
+                            }
+"&&"                        {
+                                
+                                yylval.op = strdup(yytext);
+                                return AND;
+                            }
+"||"                        {
+                                
+                                yylval.op = strdup(yytext);
+                                return OR;
+                            }
+
+
+"!"                        {
+                                
+                                yylval.op = strdup(yytext);
+                                return NOT;
+                            }
+
+
+    /* Brackets */
+
+"("                         { return LEFT_ROUND;}
+")"                         { return RIGHT_ROUND;}
+"{"                         { return LEFT_CURLY;}
+"}"                         { return RIGHT_CURLY;}
 
     /* Reserved Words */
 
 "const"                     { return CONST;}
+"if"                        { return IF;}
+"else"                      { return ELSE;}
+"for"                       { return FOR;}
+"while"                     { return WHILE;}
+"do"                        { return DO;}
+"switch"                    { return SWITCH;}
+"case"                      { return CASE;}
+
 
 ";"                         { /*yylval.semi=strdup(yytext);*/ return SEMICOLON;}
 

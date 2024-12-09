@@ -54,11 +54,37 @@
      CONST = 270,
      INC = 271,
      DEC = 272,
-     EQU = 273,
-     ADD_EQ = 274,
-     SUB_EQ = 275,
-     MULT_EQ = 276,
-     DIV_EQ = 277
+     LT = 273,
+     GT = 274,
+     LTE = 275,
+     GTE = 276,
+     EQ = 277,
+     NEQ = 278,
+     EQU = 279,
+     ADD_EQ = 280,
+     SUB_EQ = 281,
+     MULT_EQ = 282,
+     DIV_EQ = 283,
+     PLUS = 284,
+     MINUS = 285,
+     MULT = 286,
+     DIV = 287,
+     LEFT_ROUND = 288,
+     RIGHT_ROUND = 289,
+     LEFT_CURLY = 290,
+     RIGHT_CURLY = 291,
+     IF = 292,
+     ELSE = 293,
+     FOR = 294,
+     WHILE = 295,
+     DO = 296,
+     SWITCH = 297,
+     CASE = 298,
+     AND = 299,
+     OR = 300,
+     NOT = 301,
+     UNKNOWN = 302,
+     LOWER_THAN_ELSE = 303
    };
 #endif
 /* Tokens.  */
@@ -77,11 +103,37 @@
 #define CONST 270
 #define INC 271
 #define DEC 272
-#define EQU 273
-#define ADD_EQ 274
-#define SUB_EQ 275
-#define MULT_EQ 276
-#define DIV_EQ 277
+#define LT 273
+#define GT 274
+#define LTE 275
+#define GTE 276
+#define EQ 277
+#define NEQ 278
+#define EQU 279
+#define ADD_EQ 280
+#define SUB_EQ 281
+#define MULT_EQ 282
+#define DIV_EQ 283
+#define PLUS 284
+#define MINUS 285
+#define MULT 286
+#define DIV 287
+#define LEFT_ROUND 288
+#define RIGHT_ROUND 289
+#define LEFT_CURLY 290
+#define RIGHT_CURLY 291
+#define IF 292
+#define ELSE 293
+#define FOR 294
+#define WHILE 295
+#define DO 296
+#define SWITCH 297
+#define CASE 298
+#define AND 299
+#define OR 300
+#define NOT 301
+#define UNKNOWN 302
+#define LOWER_THAN_ELSE 303
 
 
 
@@ -91,7 +143,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 10 "parser.y"
+#line 12 "parser.y"
 
     int ival;    // Integer values
     double dVal; // Double values
@@ -104,7 +156,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 108 "y.tab.h"
+#line 160 "y.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

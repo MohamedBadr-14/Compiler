@@ -1,0 +1,32 @@
+for(int x = 0 ; x > 10 ; x++) 
+    x++;
+    for(x=5 ; x<5 ; x--)
+    {
+        for(y=0 ; y!= 0 ; y++)
+        {
+            while(x)
+            {
+                x++;
+            }
+            if(x)
+            {
+                y++;
+            }
+            else 
+            {
+            if(x){
+                int abdo;
+            }
+            else 
+            x++;}
+        }
+        do 
+        {
+            x++;
+            x++;
+            y=(y*1);
+        }
+        
+        while(x);
+    }
+
