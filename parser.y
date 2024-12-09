@@ -44,8 +44,6 @@ extern FILE *yyin;
 %token UNKNOWN
 
 %type <ival> expression assign_expression
-%type <op> assign_operation
-%type <sval> data_type
 %left '+' '-'
 %left '*' '/'
 %left INC DEC LT GT LTE GTE EQ NEQ AND OR NOT PLUS MINUS MULT DIV
@@ -158,7 +156,7 @@ unary_expression:
       ;
 
 assign_operation:
-        EQU       { $$ = $1; 
+        EQU       {  
                     printf("= EQUALLLLL \n");
                     } 
       | ADD_EQ            
@@ -169,8 +167,7 @@ assign_operation:
 
 assign_expression:
         IDENTIFIER assign_operation expression {
-            printf("Assignment: %s %s %d\n", $1, $2, $3);
-            $$ = $3;
+            printf("Assignment:");
         }
         ;
 

@@ -548,13 +548,13 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    59,    59,    63,    64,    68,    69,    73,    77,    78,
-      79,    80,    81,    82,    85,    87,    90,    94,    95,    98,
-      99,   103,   104,   105,   106,   110,   111,   112,   113,   114,
-     115,   116,   120,   121,   122,   125,   128,   132,   135,   136,
-     137,   138,   139,   140,   141,   145,   146,   147,   148,   149,
-     150,   154,   155,   156,   157,   161,   164,   165,   166,   167,
-     171
+       0,    57,    57,    61,    62,    66,    67,    71,    75,    76,
+      77,    78,    79,    80,    83,    85,    88,    92,    93,    96,
+      97,   101,   102,   103,   104,   108,   109,   110,   111,   112,
+     113,   114,   118,   119,   120,   123,   126,   130,   133,   134,
+     135,   136,   137,   138,   139,   143,   144,   145,   146,   147,
+     148,   152,   153,   154,   155,   159,   162,   163,   164,   165,
+     169
 };
 #endif
 
@@ -1543,105 +1543,105 @@ yyreduce:
         case 8:
 
 /* Line 1455 of yacc.c  */
-#line 77 "parser.y"
+#line 75 "parser.y"
     {printf("For Declaration\n");}
     break;
 
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 78 "parser.y"
+#line 76 "parser.y"
     {printf("Declaration\n");}
     break;
 
   case 10:
 
 /* Line 1455 of yacc.c  */
-#line 79 "parser.y"
+#line 77 "parser.y"
     {printf("Conditional Statement\n");}
     break;
 
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 80 "parser.y"
+#line 78 "parser.y"
     {printf("For Statement\n");}
     break;
 
   case 12:
 
 /* Line 1455 of yacc.c  */
-#line 81 "parser.y"
+#line 79 "parser.y"
     {printf("While Statement\n");}
     break;
 
   case 13:
 
 /* Line 1455 of yacc.c  */
-#line 82 "parser.y"
+#line 80 "parser.y"
     {printf("Do While Statement\n");}
     break;
 
   case 14:
 
 /* Line 1455 of yacc.c  */
-#line 85 "parser.y"
+#line 83 "parser.y"
     {printf("Do While Statement\n");}
     break;
 
   case 15:
 
 /* Line 1455 of yacc.c  */
-#line 87 "parser.y"
+#line 85 "parser.y"
     {printf("While Statement\n");}
     break;
 
   case 16:
 
 /* Line 1455 of yacc.c  */
-#line 90 "parser.y"
+#line 88 "parser.y"
     {printf("For Statement\n");}
     break;
 
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 98 "parser.y"
+#line 96 "parser.y"
     {printf("If Statement\n");}
     break;
 
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 99 "parser.y"
+#line 97 "parser.y"
     {printf("If Else Statement\n");}
     break;
 
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 103 "parser.y"
+#line 101 "parser.y"
     {printf("Conditional Expression\n");}
     break;
 
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 111 "parser.y"
+#line 109 "parser.y"
     {printf("Less Than\n");}
     break;
 
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 112 "parser.y"
+#line 110 "parser.y"
     {printf("Greater Than\n");}
     break;
 
   case 35:
 
 /* Line 1455 of yacc.c  */
-#line 125 "parser.y"
+#line 123 "parser.y"
     {
                 printf("Declared: %s = %d\n", (yyvsp[(2) - (5)].sval), (yyvsp[(4) - (5)].ival));
             }
@@ -1650,14 +1650,14 @@ yyreduce:
   case 36:
 
 /* Line 1455 of yacc.c  */
-#line 128 "parser.y"
+#line 126 "parser.y"
     {printf("Assign Expression\n");}
     break;
 
   case 37:
 
 /* Line 1455 of yacc.c  */
-#line 132 "parser.y"
+#line 130 "parser.y"
     { (yyval.ival) = (yyvsp[(1) - (1)].ival); 
                 printf("Integer: %d\n", (yyvsp[(1) - (1)].ival));
                 }
@@ -1666,64 +1666,64 @@ yyreduce:
   case 38:
 
 /* Line 1455 of yacc.c  */
-#line 135 "parser.y"
+#line 133 "parser.y"
     { printf("Variable: %s\n", (yyvsp[(1) - (1)].sval)); (yyval.ival) = 0; }
     break;
 
   case 39:
 
 /* Line 1455 of yacc.c  */
-#line 136 "parser.y"
+#line 134 "parser.y"
     { (yyval.ival) = (yyvsp[(1) - (1)].bVal); }
     break;
 
   case 40:
 
 /* Line 1455 of yacc.c  */
-#line 137 "parser.y"
+#line 135 "parser.y"
     { (yyval.ival) = (yyvsp[(1) - (3)].ival) + (yyvsp[(3) - (3)].ival); }
     break;
 
   case 41:
 
 /* Line 1455 of yacc.c  */
-#line 138 "parser.y"
+#line 136 "parser.y"
     { (yyval.ival) = (yyvsp[(1) - (3)].ival) - (yyvsp[(3) - (3)].ival); }
     break;
 
   case 42:
 
 /* Line 1455 of yacc.c  */
-#line 139 "parser.y"
+#line 137 "parser.y"
     { (yyval.ival) = (yyvsp[(1) - (3)].ival) * (yyvsp[(3) - (3)].ival); }
     break;
 
   case 43:
 
 /* Line 1455 of yacc.c  */
-#line 140 "parser.y"
+#line 138 "parser.y"
     { (yyval.ival) = (yyvsp[(1) - (3)].ival) / (yyvsp[(3) - (3)].ival); }
     break;
 
   case 44:
 
 /* Line 1455 of yacc.c  */
-#line 141 "parser.y"
+#line 139 "parser.y"
     { (yyval.ival) = (yyvsp[(2) - (3)].ival); }
     break;
 
   case 51:
 
 /* Line 1455 of yacc.c  */
-#line 154 "parser.y"
+#line 152 "parser.y"
     {printf("Increment: %s\n", (yyvsp[(1) - (2)].sval));}
     break;
 
   case 55:
 
 /* Line 1455 of yacc.c  */
-#line 161 "parser.y"
-    { (yyval.op) = (yyvsp[(1) - (1)].op); 
+#line 159 "parser.y"
+    {  
                     printf("= EQUALLLLL \n");
                     }
     break;
@@ -1731,17 +1731,16 @@ yyreduce:
   case 60:
 
 /* Line 1455 of yacc.c  */
-#line 171 "parser.y"
+#line 169 "parser.y"
     {
-            printf("Assignment: %s %s %d\n", (yyvsp[(1) - (3)].sval), (yyvsp[(2) - (3)].op), (yyvsp[(3) - (3)].ival));
-            (yyval.ival) = (yyvsp[(3) - (3)].ival);
+            printf("Assignment:");
         }
     break;
 
 
 
 /* Line 1455 of yacc.c  */
-#line 1745 "y.tab.c"
+#line 1744 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1953,7 +1952,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 177 "parser.y"
+#line 174 "parser.y"
 
 int yyerror(char *s) {
     fprintf(stderr, "Error: %s\n", s);
