@@ -17,26 +17,25 @@ int yyerror(char *s);
     char*semi;
 }
 
-%token INT_TYPE
-%token DOUBLE_TYPE
-%token CHAR_TYPE
-%token BOOL_TYPE
-%token STRING_TYPE
-%token VOID
+%token <sval> INT_TYPE
+%token <sval> DOUBLE_TYPE
+%token <sval> CHAR_TYPE
+%token <sval> BOOL_TYPE
+%token <sval> STRING_TYPE
+%token <sval> VOID
 %token <ival> INTEGER
 %token <dVal> DOUBLE
 %token <cval> CHAR
 %token <bVal> BOOL
 %token <sval> IDENTIFIER
-%token   SEMICOLON
+%token SEMICOLON
 %token CONST
 %token INC
 %token DEC
-%token <op> EQU
-%token ADD_EQ SUB_EQ MULT_EQ DIV_EQ
+%token <op> EQU ADD_EQ SUB_EQ MULT_EQ DIV_EQ
 
 %type <ival> expression assign_expression
-%type<op> assign_operation
+%type <op> assign_operation
 %type <sval> data_type
 %left '+' '-'
 %left '*' '/'
@@ -59,7 +58,7 @@ declaration:
         data_type IDENTIFIER EQU expression SEMICOLON {
                 printf("Declared: %s = %d\n", $2, $4);
             }
-        | CONST data_type IDENTIFIER EQU expression SEMICOLON   
+        | CONST data_type IDENTIFIER EQU expression SEMICOLON
         | unary_expression SEMICOLON                   
         | data_type IDENTIFIER SEMICOLON                
         | assign_expression SEMICOLON 
