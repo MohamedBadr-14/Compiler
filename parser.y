@@ -68,10 +68,14 @@ declaration:
         ;
 
 expression:
-    INTEGER { $$ = $1; }
+        /* Terminals */
+    INTEGER     { $$ = $1; }
+  | DOUBLE      { /*printf("Double value: %f\n", $1);*/ $$ = $1; }
   | IDENTIFIER  { printf("Variable: %s\n", $1); $$ = 0; } // You can assign a value here or do variable lookup
   | STRING      { /*printf("String \"%s\" declared\n", $1);*/ $$ = 1; }
   | CHAR        { /*printf("Char \'%c\' declard\n", $1);*/ $$ = 1; }
+  | BOOL        { /*printf("Bool %d declared\n", $1);*/ $$ = $1; }
+
   | expression '+' expression { $$ = $1 + $3; }
   | expression '-' expression { $$ = $1 - $3; }
   | expression '*' expression { $$ = $1 * $3; }

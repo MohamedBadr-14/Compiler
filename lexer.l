@@ -38,6 +38,7 @@ DIGIT               [0-9]
 DOUBLE              [0-9]+\.[0-9]+
 CHAR                \'[^\']\'
 STRING              \"[^\"]*\"
+BOOL                true|false
 IDENTIFIER          (_|{LETTER})({LETTER}|{DIGIT}|_)*
 
 
@@ -96,7 +97,7 @@ IDENTIFIER          (_|{LETTER})({LETTER}|{DIGIT}|_)*
 "bool"                      {strcpy(currentType, yytext);  return BOOL_TYPE;}
 
     /* Values of Types */
-    
+
     /* We added single and double quotes for chars and strings respecively
     so we don't cause confusion between chars, strings, and identifiers.
     x can be matched as an identifier and as a char as well, same for xy.
@@ -115,6 +116,16 @@ IDENTIFIER          (_|{LETTER})({LETTER}|{DIGIT}|_)*
                                 // printf("String value: %s\n", discard_quotes(yytext));
                                 yylval.sval = discard_quotes(yytext);
                                 return STRING;
+                            }
+
+{BOOL}                      {                                                                   
+                                // printf("String value: %s\n", discard_quotes(yytext));
+                                if (strcmp(yytext, "true")) {
+                                    yylval.bVal = true;
+                                } else if (strcmp(yytext, "false")) {
+                                    yylval.bVal = false;
+                                }
+                                return BOOL;
                             }
 
 {IDENTIFIER}                {
