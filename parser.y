@@ -79,7 +79,7 @@ expression:
   | expression '+' expression { $$ = $1 + $3; }
   | expression '-' expression { $$ = $1 - $3; }
   | expression '*' expression { $$ = $1 * $3; }
-  | expression '/' expression { $$ = $1 / $3; }
+  | expression '/' expression { if ($3 == 0) { yyerror("Division by zero"); } $$ = $1 / $3; }
   | '(' expression ')' { $$ = $2; }
 ;
 
