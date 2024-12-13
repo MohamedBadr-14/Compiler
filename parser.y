@@ -17,23 +17,19 @@ int yyerror(char *s);
     char*semi;
 }
 
-%token <sval> INT_TYPE
-%token <sval> DOUBLE_TYPE
-%token <sval> CHAR_TYPE
-%token <sval> BOOL_TYPE
-%token <sval> STRING_TYPE
+%token <sval> INT_TYPE DOUBLE_TYPE CHAR_TYPE BOOL_TYPE STRING_TYPE 
 %token <sval> VOID
 %token <ival> INTEGER
 %token <dVal> DOUBLE
 %token <cval> CHAR
 %token <bVal> BOOL
-%token <sval> STRING
-%token <sval> IDENTIFIER
+%token <sval> STRING IDENTIFIER
 %token SEMICOLON
 %token CONST
 %token INC
 %token DEC
 %token <op> EQU ADD_EQ SUB_EQ MULT_EQ DIV_EQ
+%token IF ELSE FOR WHILE SWITCH CASE BREAK CONTINUE RETURN
 
 %type <ival> expression assign_expression
 %type <op> assign_operation
@@ -52,35 +48,33 @@ program:
 
 statement:
         declaration
-        
         ;
 
 declaration:
-        data_type IDENTIFIER EQU expression SEMICOLON {
+        data_type IDENTIFIER SEMICOLON         
+        | data_type IDENTIFIER EQU expression SEMICOLON {
                 printf("Declared: %s\n", $2);
             }
         | CONST data_type IDENTIFIER EQU expression SEMICOLON
-        | unary_expression SEMICOLON                   
-        | data_type IDENTIFIER SEMICOLON                
+        | data_type IDENTIFIER EQU unary_expression SEMICOLON                   
         | assign_expression SEMICOLON 
-             
-            
+                  
         ;
 
+        
 expression:
         /* Terminals */
-    INTEGER     { $$ = $1; }
-  | DOUBLE      { /*printf("Double value: %f\n", $1);*/ $$ = $1; }
-  | IDENTIFIER  { printf("Variable: %s\n", $1); $$ = 0; } // You can assign a value here or do variable lookup
-  | STRING      { /*printf("String \"%s\" declared\n", $1);*/ $$ = 1; }
-  | CHAR        { /*printf("Char \'%c\' declard\n", $1);*/ $$ = 1; }
-  | BOOL        { /*printf("Bool %d declared\n", $1);*/ $$ = $1; }
-
-  | expression '+' expression { $$ = $1 + $3; }
-  | expression '-' expression { $$ = $1 - $3; }
-  | expression '*' expression { $$ = $1 * $3; }
-  | expression '/' expression { if ($3 == 0) { yyerror("Division by zero"); } $$ = $1 / $3; }
-  | '(' expression ')' { $$ = $2; }
+        INTEGER     { $$ = $1; }
+        | DOUBLE      { /*printf("Double value: %f\n", $1);*/ $$ = $1; }
+        | IDENTIFIER  { printf("Variable: %s\n", $1); $$ = 0; } // You can assign a value here or do variable lookup
+        | STRING      { /*printf("String \"%s\" declared\n", $1);*/ $$ = 1; }
+        | CHAR        { /*printf("Char \'%c\' declard\n", $1);*/ $$ = 1; }
+        | BOOL        { /*printf("Bool %d declared\n", $1);*/ $$ = $1; }
+        | expression '+' expression { $$ = $1 + $3;  printf("%d\n", $1 + $3); }
+        | expression '-' expression { $$ = $1 - $3; }
+        | expression '*' expression { $$ = $1 * $3; }
+        | expression '/' expression { if ($3 == 0) { yyerror("Division by zero"); } $$ = $1 / $3; }
+        | '(' expression ')' { $$ = $2; }
 ;
 
 data_type:
@@ -93,10 +87,10 @@ data_type:
       ;
 
 unary_expression:
-        IDENTIFIER INC
-      | IDENTIFIER DEC
-      | INC IDENTIFIER
-      | DEC IDENTIFIER
+        IDENTIFIER INC    
+      | IDENTIFIER DEC        
+      | INC IDENTIFIER         
+      | DEC IDENTIFIER         
       ;
 
 assign_operation:

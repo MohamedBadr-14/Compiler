@@ -96,6 +96,17 @@ IDENTIFIER          (_|{LETTER})({LETTER}|{DIGIT}|_)*
 "string"                    {strcpy(currentType, yytext); return STRING_TYPE;}
 "bool"                      {strcpy(currentType, yytext);  return BOOL_TYPE;}
 
+    /* Conditional and iterative statement */
+"if"                        { return IF; }
+"else"                      { return ELSE; }
+"for"                       { return FOR; }
+"while"                     { return WHILE; }
+"switch"                    { return SWITCH; }
+"case"                      { return CASE; }
+"break"                     { return BREAK; }
+"continue"                  { return CONTINUE; }
+"return"                    { return RETURN; }
+
     /* Values of Types */
 
     /* We added single and double quotes for chars and strings respecively
