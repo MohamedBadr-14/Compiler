@@ -27,6 +27,7 @@ int yyerror(char *s);
 %token <dVal> DOUBLE
 %token <cval> CHAR
 %token <bVal> BOOL
+%token <sval> STRING
 %token <sval> IDENTIFIER
 %token SEMICOLON
 %token CONST
@@ -56,7 +57,7 @@ statement:
 
 declaration:
         data_type IDENTIFIER EQU expression SEMICOLON {
-                printf("Declared: %s = %d\n", $2, $4);
+                printf("Declared: %s\n", $2);
             }
         | CONST data_type IDENTIFIER EQU expression SEMICOLON
         | unary_expression SEMICOLON                   
@@ -68,7 +69,9 @@ declaration:
 
 expression:
     INTEGER { $$ = $1; }
-  | IDENTIFIER { printf("Variable: %s\n", $1); $$ = 0; } // You can assign a value here or do variable lookup
+  | IDENTIFIER  { printf("Variable: %s\n", $1); $$ = 0; } // You can assign a value here or do variable lookup
+  | STRING      { /*printf("String \"%s\" declared\n", $1);*/ $$ = 1; }
+  | CHAR        { /*printf("Char \'%c\' declard\n", $1);*/ $$ = 1; }
   | expression '+' expression { $$ = $1 + $3; }
   | expression '-' expression { $$ = $1 - $3; }
   | expression '*' expression { $$ = $1 * $3; }
