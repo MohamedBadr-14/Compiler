@@ -1,32 +1,54 @@
-for(int x = 0 ; x > 10 ; x++) 
-    x++;
-    for(x=5 ; x<5 ; x--)
-    {
-        for(y=0 ; y!= 0 ; y++)
-        {
-            while(x)
-            {
-                x++;
+
+int factorial(int num);
+int checkEvenOdd(int num);
+
+int main() {
+    int choice;
+    int number;
+
+
+    switch (choice) {
+        case 1: 
+            if (number < 0) {
+                cas++;
+            } else {
+                int result = factorial(number);
             }
-            if(x)
+            break;
+
+        case 2: 
+            checkEvenOdd(number);
+            break;
+
+        case 3: 
+            for (int i = 1; i <= number; i++) 
             {
-                y++;
+                fo++;
             }
-            else 
-            {
-            if(x){
-                int abdo;
+
+            int i = 1;
+            while (i <= number) {
+                i++;
             }
-            else 
-            x++;}
-        }
-        do 
-        {
-            x++;
-            x++;
-            y=(y*1);
-        }
-        
-        while(x);
+            break;
+
+        default:
+            break;
     }
 
+}
+
+int factorial(int num) {
+    int result = 1;
+    for (int i = 1; i <= num; i++) {
+        result *= i;
+    }
+}
+
+void checkEvenOdd(int num) {
+    if (num / 2 == 0) {
+        num++;
+    } else {
+        num++;
+    }
+}

@@ -44,16 +44,13 @@ IDENTIFIER          (_|{LETTER})({LETTER}|{DIGIT}|_)*
 "\\"     { return UNKNOWN; }
 "%"     { return UNKNOWN; }
 "^"     { return UNKNOWN; }
-":"     { return UNKNOWN; }
 "|"     { return UNKNOWN; }
 "&"     { return UNKNOWN; }
 "~"     { return UNKNOWN; }
 "<<"    { return UNKNOWN; }
 ">>"    { return UNKNOWN; }
 "?"     { return UNKNOWN; }
-","     { return UNKNOWN; }
 "<>"    { return UNKNOWN; }
-
 
 "+="                         {
                                 
@@ -138,6 +135,11 @@ IDENTIFIER          (_|{LETTER})({LETTER}|{DIGIT}|_)*
                                 yylval.op = strdup(yytext);
                                 return NOT;
                             }
+","                        {
+                                
+                                yylval.op = strdup(yytext);
+                                return COMMA;
+                            }
 
 
     /* Brackets */
@@ -146,6 +148,7 @@ IDENTIFIER          (_|{LETTER})({LETTER}|{DIGIT}|_)*
 ")"                         { return RIGHT_ROUND;}
 "{"                         { return LEFT_CURLY;}
 "}"                         { return RIGHT_CURLY;}
+":"                         { return COLON; }
 
     /* Reserved Words */
 
@@ -157,6 +160,8 @@ IDENTIFIER          (_|{LETTER})({LETTER}|{DIGIT}|_)*
 "do"                        { return DO;}
 "switch"                    { return SWITCH;}
 "case"                      { return CASE;}
+"break"                     { return BREAK;}
+"default"                   { return DEFAULT;}
 
 
 ";"                         { /*yylval.semi=strdup(yytext);*/ return SEMICOLON;}
