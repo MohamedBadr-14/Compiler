@@ -2,11 +2,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
+#include "symboltable.h"
+#include "symbolentry.h"
+
+
 
 int yylex(void);
 int yyerror(char *s);
 //read from text file
 extern FILE *yyin;
+//symbol table
+SymbolTable *globalTable;
+SymbolTable *currTable;
+SymbolTable *tempTable;
+
+int scope = 0;
+//symbol entry
 %}
 
 %union {
@@ -45,6 +57,7 @@ extern FILE *yyin;
 %token UNKNOWN COLON BREAK DEFAULT
 
 %type <ival> expression assign_expression
+%type <sval> data_type
 
 %left INC DEC LT GT LTE GTE EQ NEQ AND OR NOT PLUS MINUS MULT DIV
 %right EQU ADD_EQ SUB_EQ MULT_EQ DIV_EQ
@@ -54,8 +67,15 @@ extern FILE *yyin;
 %%
 
 program:
-        statements 
+
+        start   statements 
         ;
+start:{
+        printf("Start\n");
+               globalTable = createSymbolTable("global",scope, NULL);
+                                    currTable = globalTable;
+
+        } ;        
 
 statements:
         statements statement
@@ -68,8 +88,26 @@ statement:
         ;
 
 scoped_statement:
-        LEFT_CURLY statements RIGHT_CURLY
+        start_scope  statements end_scope
         ;
+start_scope:
+        LEFT_CURLY {printf("Start Scope\n");
+        scope++;
+        tempTable = createSymbolTable("local",scope, currTable);
+        addChildToTable(currTable, tempTable);
+        currTable = tempTable;
+        }
+        ;
+end_scope:
+        RIGHT_CURLY {printf("End Scope\n");
+        scope--;
+        currTable = currTable->parent;
+        }
+
+        
+        
+        ;
+
 
 one_line_statement:
         default_declaration {printf("defualt Declaration\n");}
@@ -150,13 +188,26 @@ conditional_expression:
         ;
 
 special_declaration:
-        CONST data_type IDENTIFIER EQU expression SEMICOLON   
+        CONST data_type IDENTIFIER EQU expression SEMICOLON   {    
+        SymbolEntry *entry=createSymbolEntry($3, 0, 0,$2,"", 1, 0, NULL, "");
+
+        addEntryToTable(currTable, entry);
+        
+        }
         | unary_expression SEMICOLON                   
-        | data_type IDENTIFIER SEMICOLON                
+        | data_type IDENTIFIER SEMICOLON      {printf("Data Type Identifier\n");
+        SymbolEntry* entry= createSymbolEntryWithDefaults($2, 0,0,$1,"");
+        addEntryToTable(currTable, entry);
+        
+        
+        }
+
         ;
 default_declaration:
-        data_type IDENTIFIER EQU expression SEMICOLON {
-                printf("Declared: %s = %d\n", $2, $4);
+        data_type IDENTIFIER EQU expression SEMICOLON {    
+                 SymbolEntry* entry= createSymbolEntryWithDefaults($2, 0,0,$1,"");
+        addEntryToTable(currTable, entry);
+
             }
         | assign_expression SEMICOLON           {printf("Assign Expression\n");}
         ;
@@ -181,12 +232,24 @@ expression:
 
 
 data_type:
-        INT_TYPE        {printf("Int\n");}
-      | DOUBLE_TYPE
-      | BOOL_TYPE
-      | CHAR_TYPE
-      | STRING_TYPE
-      | VOID
+        INT_TYPE        {printf("Int Type\n");
+        $$ = "int";
+        }
+      | DOUBLE_TYPE    {printf("Double Type\n");
+        $$ = "double";
+        }
+      | BOOL_TYPE     {printf("Bool Type\n");
+        $$ = "bool";
+        }
+      | CHAR_TYPE    {printf("Char Type\n");
+        $$ = "char";
+        }
+      | STRING_TYPE {printf("String Type\n");
+        $$ = "string";
+        }
+      | VOID         {printf("Void Type\n");
+        $$ = "void";
+        }
       ;
 
 unary_expression:
@@ -210,7 +273,7 @@ assign_expression:
         IDENTIFIER assign_operation expression {
             printf("Assignment:");
         }
-        ;
+        ;        
 
 %%
 int yyerror(char *s) {
@@ -219,6 +282,7 @@ int yyerror(char *s) {
 }
 
 int main(int argc, char **argv) {
+        
     if (argc > 1) {
         yyin = fopen(argv[1], "r");
         // Print file name 
@@ -234,6 +298,7 @@ int main(int argc, char **argv) {
 
     if (yyparse() == 0) {
         printf("Parsing successful\n");
+        printTable(globalTable);
         return 0;
     } else {
         printf("Parsing failed\n");
