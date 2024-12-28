@@ -1847,7 +1847,7 @@ yyreduce:
 /* Line 1455 of yacc.c  */
 #line 191 "parser.y"
     {    
-        SymbolEntry *entry=createSymbolEntry((yyvsp[(3) - (6)].sval), 0, 0,(yyvsp[(2) - (6)].sval),"", 1, 0, NULL, "");
+        SymbolEntry *entry=createSymbolEntry((yyvsp[(3) - (6)].sval), constant, 0,(yyvsp[(2) - (6)].sval),"", 1, 0, NULL, "");
 
         addEntryToTable(currTable, entry);
         
@@ -1859,7 +1859,7 @@ yyreduce:
 /* Line 1455 of yacc.c  */
 #line 198 "parser.y"
     {printf("Data Type Identifier\n");
-        SymbolEntry* entry= createSymbolEntryWithDefaults((yyvsp[(2) - (3)].sval), 0,0,(yyvsp[(1) - (3)].sval),"");
+        SymbolEntry* entry= createSymbolEntryWithDefaults((yyvsp[(2) - (3)].sval), var,0,(yyvsp[(1) - (3)].sval),"");
         addEntryToTable(currTable, entry);
         
         
@@ -1871,7 +1871,7 @@ yyreduce:
 /* Line 1455 of yacc.c  */
 #line 207 "parser.y"
     {    
-                 SymbolEntry* entry= createSymbolEntryWithDefaults((yyvsp[(2) - (5)].sval), 0,0,(yyvsp[(1) - (5)].sval),"");
+                 SymbolEntry* entry= createSymbolEntryWithDefaults((yyvsp[(2) - (5)].sval), var,0,(yyvsp[(1) - (5)].sval),"");
         addEntryToTable(currTable, entry);
 
             }

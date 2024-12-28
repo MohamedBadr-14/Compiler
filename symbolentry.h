@@ -6,11 +6,18 @@
 #include <stdlib.h>
 #include <string.h>
 
+enum SymbolKind
+{
+    constant, //const int M
+    var,      //int x
+    func,     //void main
+    param,    //int par
+};
 
 
 typedef struct {
     char *name;
-    int kind;               // 0: variable, 1: parameter
+    enum SymbolKind kind;               // CONST, VAR, FUNC, PARAM
 
     char *type;             // type of var
     int isConstant;
@@ -23,11 +30,8 @@ typedef struct {
 } SymbolEntry;
 
 // 
-#include "symbolentry.h"
-#include <stdlib.h>
-#include <string.h>
 
-SymbolEntry *createSymbolEntry(char *name, int kind, int lineNo, char *type, char *value, int isConstant, int argCount, char **argTypes, char *returnType)
+SymbolEntry *createSymbolEntry(char *name, enum SymbolKind kind, int lineNo, char *type, char *value, int isConstant, int argCount, char **argTypes, char *returnType)
 {
     SymbolEntry *entry = (SymbolEntry *)malloc(sizeof(SymbolEntry));
     entry->name = strdup(name);
@@ -42,7 +46,7 @@ SymbolEntry *createSymbolEntry(char *name, int kind, int lineNo, char *type, cha
     return entry;
 }
 
-SymbolEntry *createSymbolEntryWithDefaults(char *name, int kind, int lineNo, char *type, char *value)
+SymbolEntry *createSymbolEntryWithDefaults(char *name, enum SymbolKind kind, int lineNo, char *type, char *value)
 {
     return createSymbolEntry(name, kind, lineNo, type, value, 0, 0, NULL, NULL);
 }
@@ -63,4 +67,4 @@ void destroyentry(SymbolEntry *entry) {
     }
 }
 
-#endif /* SymbolEntry_H */
+#endif

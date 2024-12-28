@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "symboltable.h"
+#include "Node.h"
 #include "symbolentry.h"
 
 
@@ -29,6 +30,7 @@ int scope = 0;
     char* op;
     char cval;
     char*semi;
+    Node *node;
 }
 
 %token INT_TYPE
@@ -56,8 +58,8 @@ int scope = 0;
 %token AND OR NOT
 %token UNKNOWN COLON BREAK DEFAULT
 
-%type <ival> expression assign_expression
-%type <sval> data_type
+%type <node> expression assign_expression
+%type <sval> data_type assign_operation
 
 %left INC DEC LT GT LTE GTE EQ NEQ AND OR NOT PLUS MINUS MULT DIV
 %right EQU ADD_EQ SUB_EQ MULT_EQ DIV_EQ
@@ -189,14 +191,13 @@ conditional_expression:
 
 special_declaration:
         CONST data_type IDENTIFIER EQU expression SEMICOLON   {    
-        SymbolEntry *entry=createSymbolEntry($3, 0, 0,$2,"", 1, 0, NULL, "");
+                SymbolEntry *entry=createSymbolEntry($3, constant, 0,$2,"", 1, 0, NULL, "");
+                addEntryToTable(currTable, entry);
 
-        addEntryToTable(currTable, entry);
-        
         }
         | unary_expression SEMICOLON                   
         | data_type IDENTIFIER SEMICOLON      {printf("Data Type Identifier\n");
-        SymbolEntry* entry= createSymbolEntryWithDefaults($2, 0,0,$1,"");
+        SymbolEntry* entry= createSymbolEntryWithDefaults($2, var,0,$1,"");
         addEntryToTable(currTable, entry);
         
         
@@ -205,9 +206,8 @@ special_declaration:
         ;
 default_declaration:
         data_type IDENTIFIER EQU expression SEMICOLON {    
-                 SymbolEntry* entry= createSymbolEntryWithDefaults($2, 0,0,$1,"");
-        addEntryToTable(currTable, entry);
-
+                SymbolEntry* entry= createSymbolEntryWithDefaults($2, var,0,$1,"");
+                addEntryToTable(currTable, entry);
             }
         | assign_expression SEMICOLON           {printf("Assign Expression\n");}
         ;
@@ -218,10 +218,16 @@ func_call:
         ;
 
 expression:
-    INTEGER     { $$ = $1; 
-                printf("Integer: %d\n", $1);
+    INTEGER     { 
+                        Node *node= createIntNode($1 , scope);
+                        $$ = node; 
+                        printf("Integer: %d\n", $1);
                 }
-  | IDENTIFIER { printf("Variable: %s\n", $1); $$ = 0; } // You can assign a value here or do variable lookup
+  | IDENTIFIER {
+        printf("Variable: %s\n", $1); $$ = 0; 
+        Node *node= createIDNode($1, scope);
+        $$ = node;
+        } // You can assign a value here or do variable lookup
   | expression PLUS expression { $$ = $1 + $3; }
   | expression MINUS expression { $$ = $1 - $3; }
   | expression MULT expression { $$ = $1 * $3; }
@@ -260,18 +266,40 @@ unary_expression:
       ;
 
 assign_operation:
-        EQU       {  
-                    printf("= EQUALLLLL \n");
-                    } 
-      | ADD_EQ            
-      | SUB_EQ            
-      | MULT_EQ
-      | DIV_EQ
+        EQU     {  
+                        $$ = "=";       
+                } 
+        | ADD_EQ  {
+                        $$ = "+=";
+                        }          
+        | SUB_EQ  {
+                $$ = "-=";
+        }         
+        | MULT_EQ {
+                $$ = "*=";
+        }
+        | DIV_EQ {
+                $$ = "/=";
+        }
       ;
 
 assign_expression:
         IDENTIFIER assign_operation expression {
-            printf("Assignment:");
+                if($2 == "="){
+                        
+                }
+                else if($2 == "+="){
+                        
+                }
+                else if($2 == "-="){
+                        
+                }
+                else if($2 == "*="){
+                        
+                }
+                else if($2 == "/="){
+                        
+                }
         }
         ;        
 
