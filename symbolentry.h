@@ -2,10 +2,7 @@
 #define SymbolEntry_H
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
+#include "definations.h"
 enum SymbolKind
 {
     constant, //const int M
@@ -17,11 +14,13 @@ enum SymbolKind
 
 typedef struct {
     char *name;
-    enum SymbolKind kind;               // CONST, VAR, FUNC, PARAM
+    enum SymbolKind kind;    
+    union Value value; // value of var
+    bool isInitialized;
+      
 
-    char *type;             // type of var
+    enum DataType type;             // type of var
     int isConstant;
-    char *value;
 
     int argCount;
     char **argTypes; 
@@ -31,14 +30,39 @@ typedef struct {
 
 // 
 
-SymbolEntry *createSymbolEntry(char *name, enum SymbolKind kind, int lineNo, char *type, char *value, int isConstant, int argCount, char **argTypes, char *returnType)
+SymbolEntry *createSymbolEntry(char *name, enum SymbolKind kind,union Value  v , bool initial , int lineNo, enum DataType type, int isConstant, int argCount, char **argTypes, char *returnType)
 {
     SymbolEntry *entry = (SymbolEntry *)malloc(sizeof(SymbolEntry));
+
+    if (type == TYPE_INT)
+    {
+        entry->value.iVal = v.iVal;
+    }
+    else if (type == TYPE_DOUBLE)
+    {
+        entry->value.dVal = v.dVal;
+    }
+    else if (type == TYPE_CHAR)
+    {
+        entry->value.cVal = v.cVal;
+    }
+    else if (type == TYPE_STRING)
+    {
+        entry->value.strVal = v.strVal;
+        
+    }
+    else if (type == TYPE_BOOL)
+    {
+        printf("bool   ksdmklfmsdk\n");
+        entry->value.bVal = v.bVal;
+    }
+  
+
     entry->name = strdup(name);
     entry->kind = kind;
     entry->lineNo = lineNo;
-    entry->type = strdup(type);
-    entry->value = strdup(value);
+    entry->type = type;
+    entry->isInitialized = initial;
     entry->isConstant = isConstant;
     entry->argCount = argCount;
     entry->argTypes = argTypes;
@@ -46,20 +70,18 @@ SymbolEntry *createSymbolEntry(char *name, enum SymbolKind kind, int lineNo, cha
     return entry;
 }
 
-SymbolEntry *createSymbolEntryWithDefaults(char *name, enum SymbolKind kind, int lineNo, char *type, char *value)
+SymbolEntry *createSymbolEntryWithDefaults(char *name, enum SymbolKind kind,union Value v , bool intial, int lineNo,  enum DataType type)
 {
-    return createSymbolEntry(name, kind, lineNo, type, value, 0, 0, NULL, NULL);
+    return createSymbolEntry(name, kind, v , intial,lineNo, type,  0, 0, NULL, NULL);
 }
 void destroyentry(SymbolEntry *entry) {
     if (entry != NULL) {
         free(entry->name);
-        free(entry->type);
         for (int i = 0; i < entry->argCount; i++) {
             free(entry->argTypes[i]);
         }
         free(entry->argTypes);
 
-        free(entry->value);
         free(entry->returnType);
 
 

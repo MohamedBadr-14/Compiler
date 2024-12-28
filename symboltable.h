@@ -100,8 +100,28 @@ void printTable(SymbolTable *table)
     {
         printf("Table: %s\n", table->name);
         for (int i = 0; i < table->size; i++)
+
         {
-            printf("  %s\n", table->entries[i]->name);
+            if (table->entries[i]->type == TYPE_INT)
+            {
+                printf("Name: %s, Type: int, Value: %d\n", table->entries[i]->name, table->entries[i]->value.iVal);
+            }
+            else if (table->entries[i]->type == TYPE_DOUBLE)
+            {
+                printf("Name: %s, Type: double, Value: %f\n", table->entries[i]->name, table->entries[i]->value.dVal);
+            }
+            else if (table->entries[i]->type == TYPE_CHAR)
+            {
+                printf("Name: %s, Type: char, Value: %s\n", table->entries[i]->name, table->entries[i]->value.cVal);
+            }
+            else if (table->entries[i]->type == TYPE_STRING)
+            {
+                printf("Name: %s, Type: string, Value: %s\n", table->entries[i]->name, table->entries[i]->value.strVal);
+            }
+            else if (table->entries[i]->type == TYPE_BOOL)
+            {
+                printf("Name: %s, Type: bool, Value: %s\n", table->entries[i]->name, table->entries[i]->value.bVal? "true" : "false");
+            }
         }
         for (int i = 0; i < table->childCount; i++)
         {

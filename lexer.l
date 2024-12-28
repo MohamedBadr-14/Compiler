@@ -3,9 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-
-
+#include "Node.h"
 #include "y.tab.h"
+
+
 int multiline_comment_start = 0;
 char currentType[32];
 char currentID[32];
@@ -30,6 +31,7 @@ int globalScope = 0;
 LETTER              [a-zA-Z]
 INTEGER             [0-9]+
 DIGIT               [0-9]
+
 
 IDENTIFIER          (_|{LETTER})({LETTER}|{DIGIT}|_)*
 
@@ -173,6 +175,15 @@ IDENTIFIER          (_|{LETTER})({LETTER}|{DIGIT}|_)*
 "char"                     {strcpy(currentType, yytext); return CHAR_TYPE;}
 "string"                   {strcpy(currentType, yytext); return STRING_TYPE;}
 "bool"                     {strcpy(currentType, yytext);  return BOOL_TYPE;}
+"true"                     { 
+    yylval.bVal = true;
+    return BOOLEAN;}
+
+                         
+"false"                    { 
+    yylval.bVal = false;
+    
+    return BOOLEAN;}
 
     /* Values of Types */
 
@@ -181,22 +192,21 @@ IDENTIFIER          (_|{LETTER})({LETTER}|{DIGIT}|_)*
                                 // printf("Identifier: %s \n", yytext); 
                                 yylval.sval = strdup(yytext);
                                 return IDENTIFIER;}
-(\'.\')                      {
-                                //printf("char value: %s\n", yytext);
-                                yylval.cval = yytext[1];
-                                strcpy(currentValue, yytext);
-                                //yylval.node->cVal = yytext[1];
-                                return CHAR; }
 {INTEGER}                    {
                                 //printf("integer valueee: %s\n", yytext);
                                 yylval.ival = atoi(yytext);
-                                //yylval.node->iVal = atoi(yytext);
-                                //printf("integer valueee: %d\n", atoi(yytext));
-                                //strcpy(currentValue, yytext);
-                                //yylval.node->nodeType = NODE_CONST_VALUE;
-                                //printf("[lexer]:: integer value: %d", yylval.node->iVal );
+                          
                                 return INTEGER;
                             }
+
+{INTEGER}("."{INTEGER})?     {
+                                //printf("double value: %s\n", yytext);
+                                yylval.dVal = atof(yytext);
+                                return DOUBLE;
+                            }
+
+\'[a-zA-Z0-9]\'    { yylval.cval = strdup(yytext); return CHAR; }
+\"[_!\.@%&#$?^~'a-zA-Z0-9 ]*\"  { yylval.sval = strdup(yytext); return STRING; }
 
 
 %%

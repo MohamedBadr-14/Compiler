@@ -1,16 +1,23 @@
 #include <stdio.h>
 
+int x = 0;
+int zip(){
+   x++;
+   return x;
+}
+
+
+
+
+
+
+
+
+
 int main(){
-   int x = 0;
+   int w = zip();
    int y =1;
-   switch (x)
-   {
-   default:
-      break;
-   case 1:
-      /* code */
-      x++;
-      break;
+   y /= 2;
+   printf("%d\n",w);
    
-   }
 }
