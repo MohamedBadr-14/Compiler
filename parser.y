@@ -136,7 +136,7 @@ one_line_statement:
 
 
 switch_statement:
-        SWITCH LEFT_ROUND expression RIGHT_ROUND start_scope switch_cases end_scope {printf("Switch Statement\n");}
+        SWITCH LEFT_ROUND expression RIGHT_ROUND LEFT_CURLY switch_cases LEFT_CURLY {printf("Switch Statement\n");}
         ;
 switch_cases:
         switch_case
@@ -430,6 +430,7 @@ unary_expression:
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
                 if(entry != NULL && entry->isInitialized){
+                        entry->isused = 1;
                         if (entry->kind != constant) {
                                 if (entry->type == TYPE_INT){
                                         entry->value.iVal++;
@@ -440,7 +441,7 @@ unary_expression:
                                 }
                                 else {
                                         flag = 0;
-                                        printf("Error: Data Type Mismatch\n");
+                                        logError("Data type mismatch.", yylineno);
                                 }
                                 if(flag){
                                         SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
@@ -455,6 +456,7 @@ unary_expression:
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
                 if(entry != NULL && entry->isInitialized){
+                        entry->isused = 1;
                         if (entry->kind != constant) {
                                 if (entry->type == TYPE_INT){
                                         entry->value.iVal--;
@@ -479,6 +481,7 @@ unary_expression:
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $2);
                 if(entry != NULL && entry->isInitialized){
+                        entry->isused = 1;
                         if (entry->kind != constant) {
                                 if (entry->type == TYPE_INT){
                                         entry->value.iVal++;
@@ -503,6 +506,7 @@ unary_expression:
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $2);
                 if(entry != NULL && entry->isInitialized){
+                        entry->isused = 1;
                         if (entry->kind != constant) {
                                 if (entry->type == TYPE_INT){
                                         entry->value.iVal--;
@@ -547,6 +551,7 @@ assign_expression:
         IDENTIFIER assign_operation expression {
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
                 if(entry != NULL){
+                        entry->isused = 1;
                         if(entry->kind == constant) logError("Cannot modify constant variable.", yylineno);
                         if (entry->type == $3->dataType)
                         {
@@ -641,6 +646,7 @@ int main(int argc, char **argv) {
     if (yyparse() == 0) {
         printf("Parsing successful\n");
         printTable(globalTable);
+        getUnusedEntries(globalTable);
         return 0;
     } else {
         printf("Parsing failed\n");

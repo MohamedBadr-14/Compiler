@@ -21,7 +21,7 @@ typedef struct {
 
     enum DataType type;             // type of var
     int isConstant;
-
+    int isused;
     int argCount;
     char **argTypes; 
     char *returnType;      
@@ -30,7 +30,7 @@ typedef struct {
 
 // 
 
-SymbolEntry *createSymbolEntry(char *name, enum SymbolKind kind,union Value  v , bool initial , int lineNo, enum DataType type, int isConstant, int argCount, char **argTypes, char *returnType)
+extern SymbolEntry *createSymbolEntry(char *name, enum SymbolKind kind,union Value  v , bool initial , int lineNo, enum DataType type, int isConstant, int argCount, char **argTypes, char *returnType)
 {
     SymbolEntry *entry = (SymbolEntry *)malloc(sizeof(SymbolEntry));
 
@@ -67,14 +67,15 @@ SymbolEntry *createSymbolEntry(char *name, enum SymbolKind kind,union Value  v ,
     entry->argCount = argCount;
     entry->argTypes = argTypes;
     entry->returnType = returnType ? strdup(returnType) : NULL;
+    entry->isused = 0;
     return entry;
 }
 
-SymbolEntry *createSymbolEntryWithDefaults(char *name, enum SymbolKind kind,union Value v , bool intial, int lineNo,  enum DataType type)
+extern SymbolEntry *createSymbolEntryWithDefaults(char *name, enum SymbolKind kind,union Value v , bool intial, int lineNo,  enum DataType type)
 {
     return createSymbolEntry(name, kind, v , intial,lineNo, type,  0, 0, NULL, NULL);
 }
-void destroyentry(SymbolEntry *entry) {
+extern void destroyentry(SymbolEntry *entry) {
     if (entry != NULL) {
         free(entry->name);
         for (int i = 0; i < entry->argCount; i++) {

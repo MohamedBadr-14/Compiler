@@ -130,8 +130,19 @@ void printTable(SymbolTable *table)
     }
 }
 
-
-
+void getUnusedEntries(SymbolTable *table)
+{
+    if (table != NULL)
+    {
+        for (int i = 0; i < table->size; i++)
+        {
+            if (table->entries[i]->isused == 0)
+                printf("Entry: %s is not used.\n", table->entries[i]->name);
+        }
+        for (int i = 0; i < table->childCount; i++)
+            getUnusedEntries(table->children[i]);
+    }
+}
 
 
 #endif /* SYMBOLTABLE_H */
