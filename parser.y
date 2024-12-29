@@ -7,7 +7,7 @@
 #include "symboltable.h"
 #include "symbolentry.h"
 
-
+const char *filename;
 extern int yylineno;
 int yylex(void);
 int yyerror(char *s);
@@ -21,6 +21,11 @@ SymbolTable *tempTable;
 int scope = 0;
 // extern int yylineno;
 //symbol entry
+
+void logError(const char *message, int line_num) {
+    fprintf(stderr, "%s: Error at line %d: %s\n", filename, line_num, message);
+    exit(-1);
+}
 %}
 
 %union {
@@ -241,9 +246,7 @@ default_declaration:
 
                     
                 }
-                else{
-                        printf("Error: Data Type Mismatch\n");
-                }
+                else logError("Data type mismatch.", yylineno);
 
             
             }
@@ -279,35 +282,35 @@ expression:
         | IDENTIFIER {
         printf("Identifier:%s \n", $1);
         SymbolEntry *entry = getentryfromalltables(currTable, $1);
-        if(entry != NULL && entry->isInitialized){
-                if (entry->type == TYPE_INT){
-                        printf("Int BADR: %d\n", entry->value.iVal);
-                        Node *node= createIntNode(entry->value.iVal, scope);
-                        $$ = node;
-                }
-                else if (entry->type == TYPE_DOUBLE){
-                        Node *node= createDoubleNode(entry->value.dVal, scope);
-                        $$ = node;
-                }    else if (entry->type == TYPE_BOOL){
-                        Node *node= createBoolNode(entry->value.bVal, scope);
-                        $$ = node;
-                }
-            
-                else if (entry->type == TYPE_CHAR){
-                        Node *node= createCharNode(entry->value.cVal, scope);
-                        $$ = node;
-                }
-                else if (entry->type == TYPE_STRING){
-                        Node *node= createStringNode(entry->value.strVal, scope);
-                        $$ = node;
-                }
+        if (entry->kind != param) {
+                if(entry != NULL && entry->isInitialized){
+                        if (entry->type == TYPE_INT){
+                                printf("Int BADR: %d\n", entry->value.iVal);
+                                Node *node= createIntNode(entry->value.iVal, scope);
+                                $$ = node;
+                        }
+                        else if (entry->type == TYPE_DOUBLE){
+                                Node *node= createDoubleNode(entry->value.dVal, scope);
+                                $$ = node;
+                        }    else if (entry->type == TYPE_BOOL){
+                                Node *node= createBoolNode(entry->value.bVal, scope);
+                                $$ = node;
+                        }
+                
+                        else if (entry->type == TYPE_CHAR){
+                                Node *node= createCharNode(entry->value.cVal, scope);
+                                $$ = node;
+                        }
+                        else if (entry->type == TYPE_STRING){
+                                Node *node= createStringNode(entry->value.strVal, scope);
+                                $$ = node;
+                        }
 
-             
+                
+                }
+                else logError("Variable is uninitalized or undeclared.", yylineno);
         }
-        else{
-                printf("Error: Variable not declared or intialized\n");
-        }
-        
+
         }
 | BOOLEAN {
 
@@ -329,14 +332,9 @@ expression:
                         Node *node= createDoubleNode($1->value.dVal+ $3->value.dVal, scope);
                         $$ = node;
                 }
-                else{
-                        printf("Error: ERROORR");
-                }
+                else logError("Syntax error. Only int and double can use this operator.", yylineno);
         }
-        else{
-                printf("Error: Data Type Mismatch\n");
-        }
-
+        else logError("Data type mismatch.", yylineno);
      
           }
   | expression MINUS expression { 
@@ -352,17 +350,9 @@ expression:
                         Node *node= createDoubleNode($1->value.dVal- $3->value.dVal, scope);
                         $$ = node;
                 }
-                else {
-                        printf("Error: ERROORR");
-                }
+                else logError("Syntax error. Only int and double can use this operator.", yylineno);
         }
-        else
-        {
-                printf("Error: Data Type Mismatch\n");
-        }
-
-        
-
+        else logError("Data type mismatch.", yylineno);
 
 
    }
@@ -379,38 +369,36 @@ expression:
                         Node *node= createDoubleNode($1->value.dVal* $3->value.dVal, scope);
                         $$ = node;
                 }
-                else {
-                        printf("Error: ERROORR");
-                }
+                else logError("Syntax error. Only int and double can use this operator.", yylineno);
         }
-        else
-        {
-                printf("Error: Data Type Mismatch\n");
-        }
+        else logError("Data type mismatch.", yylineno);
 
  }
   | expression DIV expression { 
         if($1->dataType == $3->dataType )
         {
-                if($1->dataType == TYPE_INT && $3->value.iVal != 0)
+                if($1->dataType == TYPE_INT)
                 {
+                        if ($3->value.iVal == 0)
+                        logError("Runtime error: Division by zero.", yylineno);
+                        else {
                         Node *node= createIntNode($1->value.iVal/ $3->value.iVal, scope);
                         $$ = node;
+                        }
                 }
-                else if($1->dataType == TYPE_DOUBLE && $3->value.dVal != 0)
+                else if($1->dataType == TYPE_DOUBLE)
                 {
+                        if ($3->value.dVal == 0)
+                        logError("Runtime error: Division by zero.", yylineno);
+                        else {
                         Node *node= createDoubleNode($1->value.dVal/ $3->value.dVal, scope);
                         $$ = node;
+                        }
                 }
-                else {
-                        printf("Error: ERROORR");
-                }
+                else logError("Syntax error. Only int and double can use this operator.", yylineno);
         }
-        else
-        {
-                printf("Error: Data Type Mismatch\n");
-        }
-        }
+        else logError("Data type mismatch.", yylineno);
+}
   | LEFT_ROUND expression RIGHT_ROUND { $$ = $2; }
   | func_call {printf("Function Call\n");}
 ;
@@ -441,96 +429,99 @@ unary_expression:
         IDENTIFIER INC {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
-                if(entry != NULL && entry->isInitialized && entry->kind != constant){
-                        if (entry->type == TYPE_INT){
-                                entry->value.iVal++;
-                                
+                if(entry != NULL && entry->isInitialized){
+                        if (entry->kind != constant) {
+                                if (entry->type == TYPE_INT){
+                                        entry->value.iVal++;
+                                        
+                                }
+                                else if (entry->type == TYPE_DOUBLE){
+                                        entry->value.dVal++;
+                                }
+                                else {
+                                        flag = 0;
+                                        printf("Error: Data Type Mismatch\n");
+                                }
+                                if(flag){
+                                        SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
+                                        modifyentry(currTable, entry->name , newEntry);
+                                }
                         }
-                        else if (entry->type == TYPE_DOUBLE){
-                                entry->value.dVal++;
-                        }
-                        else {
-                                flag = 0;
-                                printf("Error: Data Type Mismatch\n");
-                        }
-                        if(flag){
-                                SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
-                                modifyentry(currTable, entry->name , newEntry);
-                        }
+                        else logError("Cannot modify constant variable.", yylineno);
                 }
-                else {
-                        printf("Error: Variable not declared and constanttttt\n");
-                }
+                else logError("Variable is uninitialized or undeclared.", yylineno);
         }
       | IDENTIFIER DEC {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
-                if(entry != NULL && entry->isInitialized && entry->kind != constant){
-                        if (entry->type == TYPE_INT){
-                                entry->value.iVal--;
-                        }
-                        else if (entry->type == TYPE_DOUBLE){
-                                entry->value.dVal--;
-                        }
-                        else {
-                                printf("Error: Data Type Mismatch\n");
-                                flag = 0;
-                        }
-                        if(flag){
-                                SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
-                                modifyentry(currTable, entry->name , newEntry);
+                if(entry != NULL && entry->isInitialized){
+                        if (entry->kind != constant) {
+                                if (entry->type == TYPE_INT){
+                                        entry->value.iVal--;
                                 }
+                                else if (entry->type == TYPE_DOUBLE){
+                                        entry->value.dVal--;
+                                }
+                                else {
+                                        printf("Error: Data Type Mismatch\n");
+                                        flag = 0;
+                                }
+                                if(flag){
+                                        SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
+                                        modifyentry(currTable, entry->name , newEntry);
+                                        }
+                        }
+                        else logError("Cannot modify constant variable.", yylineno);
                 }
-                else {
-                        printf("Error: Variable not declared\n");
-                }
+                else logError("Variable is uninitialized or undeclared.", yylineno);
         }
       | INC IDENTIFIER {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $2);
-                if(entry != NULL && entry->isInitialized && entry->kind != constant){
-                        if (entry->type == TYPE_INT){
-                                entry->value.iVal++;
+                if(entry != NULL && entry->isInitialized){
+                        if (entry->kind != constant) {
+                                if (entry->type == TYPE_INT){
+                                        entry->value.iVal++;
+                                }
+                                else if (entry->type == TYPE_DOUBLE){
+                                        entry->value.dVal++;
+                                }
+                                else {
+                                        printf("Error: Data Type Mismatch\n");
+                                        flag = 0;
+                                }
+                                if(flag){
+                                        SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
+                                        modifyentry(currTable, entry->name , newEntry);
+                                }
                         }
-                        else if (entry->type == TYPE_DOUBLE){
-                                entry->value.dVal++;
-                        }
-                        else {
-                                printf("Error: Data Type Mismatch\n");
-                                flag = 0;
-                        }
-                        if(flag){
-                                SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
-                                modifyentry(currTable, entry->name , newEntry);
-                        }
+                        else logError("Cannot modify constant variable.", yylineno);
                 }
-                else {
-                        printf("Error: Variable not declared\n");
-                }
+                else logError("Variable is uninitialized or undeclared.", yylineno);
         }
       | DEC IDENTIFIER {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $2);
-                if(entry != NULL && entry->isInitialized && entry->kind != constant){
-                        if (entry->type == TYPE_INT){
-                                entry->value.iVal--;
+                if(entry != NULL && entry->isInitialized){
+                        if (entry->kind != constant) {
+                                if (entry->type == TYPE_INT){
+                                        entry->value.iVal--;
+                                }
+                                else if (entry->type == TYPE_DOUBLE){
+                                        entry->value.dVal--;
+                                }
+                                else {
+                                        printf("Error: Data Type Mismatch\n");
+                                        flag = 0;
+                                }
+                                if(flag){
+                                        SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value, true ,0, entry->type);
+                                        modifyentry(currTable, entry->name , newEntry);
+                                }
                         }
-                        else if (entry->type == TYPE_DOUBLE){
-                                entry->value.dVal--;
-                        }
-                        else {
-                                printf("Error: Data Type Mismatch\n");
-                                flag = 0;
-                        }
-                        if(flag){
-                                SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value, true ,0, entry->type);
-                                modifyentry(currTable, entry->name , newEntry);
-                        }
-                        
+                        else logError("Cannot modify constant variable.", yylineno); 
                 }
-                else {
-                        printf("Error: Variable not declared\n");
-                }
+                else logError("Variable is uninitialized or undeclared.", yylineno);
         }
       ;
 
@@ -555,10 +546,10 @@ assign_operation:
 assign_expression:
         IDENTIFIER assign_operation expression {
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
-                if(entry != NULL && entry->kind != constant){
+                if(entry != NULL){
+                        if(entry->kind == constant) logError("Cannot modify constant variable.", yylineno);
                         if (entry->type == $3->dataType)
                         {
-
                                 if($2 == "="){
                                         if (entry->type == TYPE_INT){
                                                 entry->value.iVal = $3->value.iVal;
@@ -585,7 +576,8 @@ assign_expression:
                                                 entry->value.dVal += $3->value.dVal;
                                         }
                                         else {
-                                                printf("Error: Data Type Mismatch\n");
+                                                logError("Data type mismatch.", yylineno);
+                                                exit(-1);
                                         }
                                
                                 }
@@ -596,10 +588,6 @@ assign_expression:
                                         else if (entry->type == TYPE_DOUBLE){
                                                 entry->value.dVal -= $3->value.dVal;
                                         }
-                                        else {
-                                                printf("Error: Data Type Mismatch\n");
-                                        }
-                                
                                 }
                                 else if($2 == "*="){
                                         if (entry->type == TYPE_INT){
@@ -608,35 +596,23 @@ assign_expression:
                                         else if (entry->type == TYPE_DOUBLE){
                                                 entry->value.dVal *= $3->value.dVal;
                                         }
-                                        else {
-                                                printf("Error: Data Type Mismatch\n");
-                                        }
-                                
                                 }
                                 else if($2 == "/="){
                                         if (entry->type == TYPE_INT){
+                                                if ($3->value.iVal == 0) logError("Runtime error: Division by zero.", yylineno);
                                                 entry->value.iVal /= $3->value.iVal;
                                         }
                                         else if (entry->type == TYPE_DOUBLE){
+                                                if ($3->value.dVal == 0) logError("Runtime error: Division by zero.", yylineno);
                                                 entry->value.dVal /= $3->value.dVal;
                                         }
-                                        else {
-                                                printf("Error: Data Type Mismatch\n");
-                                        }
-                                
-
-                                
                                 }
                                 SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
                                 modifyentry(currTable, entry->name , newEntry);
                         }
-                        else{
-                                printf("Error: Data Type Mismatch\n");
-                        }
+                        else logError("Data type mismatch.", yylineno);
                 }
-                else {
-                        printf("Error: Variable not declared ezay geet hena\n");
-                }
+                else logError("Variable is undeclared.", yylineno);
                 }
         ;        
 
@@ -651,7 +627,8 @@ int main(int argc, char **argv) {
     if (argc > 1) {
         yyin = fopen(argv[1], "r");
         // Print file name 
-        printf("File name: %s\n", argv[1]);
+        filename = argv[1];
+        printf("File name: %s\n", filename);
         if (!yyin) {
             perror("Error opening file");
             return 1;
