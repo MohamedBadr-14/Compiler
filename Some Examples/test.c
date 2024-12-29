@@ -1,23 +1,23 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-int x = 0;
-int zip(){
-   x++;
-   return x;
-}
+int main() {
+
+    char numStr[5];
+    sprintf(numStr, "%d", number);
+
+    char *result = (char *)malloc(strlen(numStr) + 2); 
+    if (result == NULL) {
+        printf("Memory allocation failed!\n");
+        return NULL; 
+    }
+
+    result[0] = initial;            
+    strcpy(result + 1, numStr);      
 
 
 
 
-
-
-
-
-
-int main(){
-   int w = zip();
-   int y =1;
-   y /= 2;
-   printf("%d\n",w);
-   
+    return result;
 }

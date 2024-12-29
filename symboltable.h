@@ -71,7 +71,27 @@ void modifyentry (SymbolTable *table, char *name,SymbolEntry *newentry)
     SymbolEntry *entry = getentryfromalltables(table, name);
     if (entry != NULL)
     {
-        entry = newentry;    
+        entry->isInitialized = newentry->isInitialized;
+        if (newentry->type == TYPE_INT)
+        {
+            entry->value.iVal = newentry->value.iVal;
+        }
+        else if (newentry->type == TYPE_DOUBLE)
+        {
+            entry->value.dVal = newentry->value.dVal;
+        }
+        else if (newentry->type == TYPE_CHAR)
+        {
+            entry->value.cVal = newentry->value.cVal;
+        }
+        else if (newentry->type == TYPE_STRING)
+        {
+            entry->value.strVal = newentry->value.strVal;
+        }
+        else if (newentry->type == TYPE_BOOL)
+        {
+            entry->value.bVal = newentry->value.bVal;
+        }
     }
 }
 

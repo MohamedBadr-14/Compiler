@@ -24,9 +24,10 @@ typedef struct Node {
 
 }Node;
 
-Node* createIntNode(int value , int scope ) ;
-Node* createDoubleNode(double value , int scope ) ;
-Node* createCharNode(char* value , int scope ) ;
-Node* createStringNode(char* value , int scope ) ;
+Node* createIntNode(int value , int scope , int new_count , bool flag) ;
+Node* createDoubleNode(double value , int scope , int new_count , bool flag) ;
+Node* createCharNode(char* value , int scope , int new_count , bool flag) ;
+Node* createStringNode(char* value , int scope, int new_count , bool flag) ;
 Node* createBoolNode(bool value , int scope ) ;
 Node* createIDNode(char* name , int scope,enum DataType type ) ;
+

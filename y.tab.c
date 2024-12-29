@@ -77,6 +77,7 @@
 #include "Node.h"
 #include "symboltable.h"
 #include "symbolentry.h"
+#include "quad.h"
 
 
 extern int yylineno;
@@ -92,10 +93,11 @@ SymbolTable *tempTable;
 int scope = 0;
 // extern int yylineno;
 //symbol entry
+int tempCount = 0;
 
 
 /* Line 189 of yacc.c  */
-#line 99 "y.tab.c"
+#line 101 "y.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -238,7 +240,7 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 26 "parser.y"
+#line 28 "parser.y"
 
     Node* node;
     int ival;    // Integer values
@@ -253,7 +255,7 @@ typedef union YYSTYPE
 
 
 /* Line 214 of yacc.c  */
-#line 257 "y.tab.c"
+#line 259 "y.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -265,7 +267,7 @@ typedef union YYSTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 269 "y.tab.c"
+#line 271 "y.tab.c"
 
 #ifdef short
 # undef short
@@ -589,15 +591,15 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    79,    79,    81,    89,    90,    94,    95,    99,   102,
-     110,   121,   122,   123,   124,   125,   126,   127,   128,   129,
-     134,   137,   138,   141,   142,   143,   144,   148,   149,   150,
-     151,   154,   155,   158,   159,   163,   166,   169,   173,   174,
-     177,   178,   182,   183,   184,   185,   189,   190,   191,   192,
-     193,   194,   195,   196,   200,   205,   206,   217,   250,   254,
-     255,   259,   264,   269,   274,   279,   312,   322,   342,   369,
-     392,   414,   415,   420,   423,   426,   429,   432,   435,   441,
-     465,   488,   511,   538,   541,   544,   547,   550,   556
+       0,    81,    81,    83,    91,    92,    96,    97,   101,   104,
+     112,   123,   124,   125,   126,   127,   128,   129,   130,   131,
+     136,   139,   140,   143,   144,   145,   146,   150,   151,   152,
+     153,   156,   157,   160,   161,   165,   168,   171,   175,   176,
+     179,   180,   184,   185,   186,   187,   191,   192,   193,   194,
+     195,   196,   197,   198,   202,   207,   208,   219,   254,   258,
+     259,   263,   268,   273,   278,   283,   296,   306,   330,   356,
+     383,   409,   410,   415,   418,   421,   424,   427,   430,   436,
+     461,   486,   510,   538,   541,   544,   547,   550,   556
 };
 #endif
 
@@ -1662,7 +1664,7 @@ yyreduce:
         case 3:
 
 /* Line 1455 of yacc.c  */
-#line 81 "parser.y"
+#line 83 "parser.y"
     {
         printf("Start\n");
                globalTable = createSymbolTable("global",scope, NULL);
@@ -1674,7 +1676,7 @@ yyreduce:
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 102 "parser.y"
+#line 104 "parser.y"
     {printf("Start Scope\n");
         scope++;
         tempTable = createSymbolTable("local",scope, currTable);
@@ -1686,7 +1688,7 @@ yyreduce:
   case 10:
 
 /* Line 1455 of yacc.c  */
-#line 110 "parser.y"
+#line 112 "parser.y"
     {printf("End Scope\n");
         scope--;
         currTable = currTable->parent;
@@ -1696,168 +1698,168 @@ yyreduce:
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 121 "parser.y"
+#line 123 "parser.y"
     {printf("defualt Declaration\n");}
     break;
 
   case 12:
 
 /* Line 1455 of yacc.c  */
-#line 122 "parser.y"
+#line 124 "parser.y"
     {printf("func_statment \n");}
     break;
 
   case 13:
 
 /* Line 1455 of yacc.c  */
-#line 123 "parser.y"
+#line 125 "parser.y"
     {printf("special Declaration\n");}
     break;
 
   case 14:
 
 /* Line 1455 of yacc.c  */
-#line 124 "parser.y"
+#line 126 "parser.y"
     {printf("Conditional Statement\n");}
     break;
 
   case 15:
 
 /* Line 1455 of yacc.c  */
-#line 125 "parser.y"
+#line 127 "parser.y"
     {printf("For Statement\n");}
     break;
 
   case 16:
 
 /* Line 1455 of yacc.c  */
-#line 126 "parser.y"
+#line 128 "parser.y"
     {printf("While Statement\n");}
     break;
 
   case 17:
 
 /* Line 1455 of yacc.c  */
-#line 127 "parser.y"
+#line 129 "parser.y"
     {printf("Do While Statement\n");}
     break;
 
   case 18:
 
 /* Line 1455 of yacc.c  */
-#line 128 "parser.y"
+#line 130 "parser.y"
     {printf("Function Call with semi colonnnn\n");}
     break;
 
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 129 "parser.y"
+#line 131 "parser.y"
     {printf("Switch Statement\n");}
     break;
 
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 134 "parser.y"
+#line 136 "parser.y"
     {printf("Switch Statement\n");}
     break;
 
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 148 "parser.y"
+#line 150 "parser.y"
     {printf("Function Statement no params\n");}
     break;
 
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 149 "parser.y"
+#line 151 "parser.y"
     {printf("Function Statement no params\n");}
     break;
 
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 150 "parser.y"
+#line 152 "parser.y"
     {printf("Function Statement\n");}
     break;
 
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 151 "parser.y"
+#line 153 "parser.y"
     {printf("Function Statement\n");}
     break;
 
   case 32:
 
 /* Line 1455 of yacc.c  */
-#line 155 "parser.y"
+#line 157 "parser.y"
     {printf("COMAAAA\n");}
     break;
 
   case 35:
 
 /* Line 1455 of yacc.c  */
-#line 163 "parser.y"
+#line 165 "parser.y"
     {printf("Do While Statement\n");}
     break;
 
   case 36:
 
 /* Line 1455 of yacc.c  */
-#line 166 "parser.y"
+#line 168 "parser.y"
     {printf("While Statement\n");}
     break;
 
   case 37:
 
 /* Line 1455 of yacc.c  */
-#line 169 "parser.y"
+#line 171 "parser.y"
     {printf("For Statement\n");}
     break;
 
   case 40:
 
 /* Line 1455 of yacc.c  */
-#line 177 "parser.y"
+#line 179 "parser.y"
     {printf("If Statement\n");}
     break;
 
   case 41:
 
 /* Line 1455 of yacc.c  */
-#line 178 "parser.y"
+#line 180 "parser.y"
     {printf("If Else Statement\n");}
     break;
 
   case 42:
 
 /* Line 1455 of yacc.c  */
-#line 182 "parser.y"
+#line 184 "parser.y"
     {printf("Conditional Expression\n");}
     break;
 
   case 47:
 
 /* Line 1455 of yacc.c  */
-#line 190 "parser.y"
+#line 192 "parser.y"
     {printf("Less Than\n");}
     break;
 
   case 48:
 
 /* Line 1455 of yacc.c  */
-#line 191 "parser.y"
+#line 193 "parser.y"
     {printf("Greater Than\n");}
     break;
 
   case 54:
 
 /* Line 1455 of yacc.c  */
-#line 200 "parser.y"
+#line 202 "parser.y"
     {    
                 SymbolEntry *entry=createSymbolEntry((yyvsp[(3) - (6)].sval), constant, (yyvsp[(5) - (6)].node)->value,true,0,(yyvsp[(2) - (6)].dataType), 1, 0, NULL, "");
                 addEntryToTable(currTable, entry);
@@ -1868,7 +1870,7 @@ yyreduce:
   case 56:
 
 /* Line 1455 of yacc.c  */
-#line 206 "parser.y"
+#line 208 "parser.y"
     {printf("Data Type Identifier\n");
         Node *node= createIDNode((yyvsp[(2) - (3)].sval), scope,(yyvsp[(1) - (3)].dataType));
 
@@ -1882,11 +1884,13 @@ yyreduce:
   case 57:
 
 /* Line 1455 of yacc.c  */
-#line 217 "parser.y"
+#line 219 "parser.y"
     {  
-                printf("Default Declaration \n" ); 
+                printf("Default Declaration \n" );
+                printf("Data Type: %d data type el tanyyy %d\n", (yyvsp[(1) - (5)].dataType) , (yyvsp[(4) - (5)].node)->dataType); 
                 if((yyvsp[(1) - (5)].dataType) == (yyvsp[(4) - (5)].node)->dataType){
                         if ((yyvsp[(1) - (5)].dataType) == TYPE_INT){
+                                insertQuad((yyvsp[(4) - (5)].node)->name , NULL , "=" , (yyvsp[(2) - (5)].sval) , 0);
                                 SymbolEntry* entry= createSymbolEntryWithDefaults((yyvsp[(2) - (5)].sval), var, (yyvsp[(4) - (5)].node)->value,true,0, (yyvsp[(1) - (5)].dataType));
                                 addEntryToTable(currTable, entry);
                         }
@@ -1921,16 +1925,16 @@ yyreduce:
   case 58:
 
 /* Line 1455 of yacc.c  */
-#line 250 "parser.y"
+#line 254 "parser.y"
     {printf("Assign Expression\n");}
     break;
 
   case 61:
 
 /* Line 1455 of yacc.c  */
-#line 259 "parser.y"
-    { 
-                        Node *node= createIntNode((yyvsp[(1) - (1)].ival) , scope);
+#line 263 "parser.y"
+    {
+                        Node *node= createIntNode((yyvsp[(1) - (1)].ival) , scope , tempCount , true);
                         (yyval.node) = node; 
                         printf("Integer: %d\n", (yyvsp[(1) - (1)].ival));
                 }
@@ -1939,9 +1943,9 @@ yyreduce:
   case 62:
 
 /* Line 1455 of yacc.c  */
-#line 264 "parser.y"
+#line 268 "parser.y"
     { 
-                                Node *node= createDoubleNode((yyvsp[(1) - (1)].dVal), scope);
+                                Node *node= createDoubleNode((yyvsp[(1) - (1)].dVal), scope , tempCount , true);
                                 (yyval.node) = node;
                                 printf("Double: %f\n", (yyvsp[(1) - (1)].dVal));
                         }
@@ -1950,9 +1954,9 @@ yyreduce:
   case 63:
 
 /* Line 1455 of yacc.c  */
-#line 269 "parser.y"
+#line 273 "parser.y"
     { 
-                                Node *node= createCharNode((yyvsp[(1) - (1)].cval), scope);
+                                Node *node= createCharNode((yyvsp[(1) - (1)].cval), scope , tempCount , true);
                                 (yyval.node) = node;
                                 printf("Char: %c\n", (yyvsp[(1) - (1)].cval));
                         }
@@ -1961,9 +1965,9 @@ yyreduce:
   case 64:
 
 /* Line 1455 of yacc.c  */
-#line 274 "parser.y"
+#line 278 "parser.y"
     { 
-                                Node *node= createStringNode((yyvsp[(1) - (1)].sval), scope);
+                                Node *node= createStringNode((yyvsp[(1) - (1)].sval), scope, tempCount , true);
                                 (yyval.node) = node;
                                 printf("String: %s\n", (yyvsp[(1) - (1)].sval));
                         }
@@ -1972,34 +1976,14 @@ yyreduce:
   case 65:
 
 /* Line 1455 of yacc.c  */
-#line 279 "parser.y"
+#line 283 "parser.y"
     {
-        printf("Identifier:%s \n", (yyvsp[(1) - (1)].sval));
         SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(1) - (1)].sval));
+        printf("Identifier:%s intialized %d \n", (yyvsp[(1) - (1)].sval) , entry->isInitialized ? 1 : 0);
         if(entry != NULL && entry->isInitialized){
-                if (entry->type == TYPE_INT){
-                        printf("Int BADR: %d\n", entry->value.iVal);
-                        Node *node= createIntNode(entry->value.iVal, scope);
-                        (yyval.node) = node;
-                }
-                else if (entry->type == TYPE_DOUBLE){
-                        Node *node= createDoubleNode(entry->value.dVal, scope);
-                        (yyval.node) = node;
-                }    else if (entry->type == TYPE_BOOL){
-                        Node *node= createBoolNode(entry->value.bVal, scope);
-                        (yyval.node) = node;
-                }
-            
-                else if (entry->type == TYPE_CHAR){
-                        Node *node= createCharNode(entry->value.cVal, scope);
-                        (yyval.node) = node;
-                }
-                else if (entry->type == TYPE_STRING){
-                        Node *node= createStringNode(entry->value.strVal, scope);
-                        (yyval.node) = node;
-                }
-
-             
+                Node* node = createIDNode((yyvsp[(1) - (1)].sval), scope, entry->type);
+                node->value = entry->value;
+                (yyval.node) = node;
         }
         else{
                 printf("Error: Variable not declared or intialized\n");
@@ -2011,7 +1995,7 @@ yyreduce:
   case 66:
 
 /* Line 1455 of yacc.c  */
-#line 312 "parser.y"
+#line 296 "parser.y"
     {
 
      
@@ -2025,15 +2009,19 @@ yyreduce:
   case 67:
 
 /* Line 1455 of yacc.c  */
-#line 322 "parser.y"
+#line 306 "parser.y"
     {
         if ((yyvsp[(1) - (3)].node)->dataType == (yyvsp[(3) - (3)].node)->dataType){
                 if ((yyvsp[(1) - (3)].node)->dataType == TYPE_INT){
-                        Node *node= createIntNode((yyvsp[(1) - (3)].node)->value.iVal+ (yyvsp[(3) - (3)].node)->value.iVal, scope);
+                        tempCount++;
+                        Node *node= createIntNode((yyvsp[(1) - (3)].node)->value.iVal+ (yyvsp[(3) - (3)].node)->value.iVal, scope , tempCount , false);
+                        insertQuad((yyvsp[(1) - (3)].node)->name , (yyvsp[(3) - (3)].node)->name , "+" , node->name , 0);
                         (yyval.node) = node;
                 }
                 else if ((yyvsp[(1) - (3)].node)->dataType == TYPE_DOUBLE){
-                        Node *node= createDoubleNode((yyvsp[(1) - (3)].node)->value.dVal+ (yyvsp[(3) - (3)].node)->value.dVal, scope);
+                        tempCount++;
+                        Node *node= createDoubleNode((yyvsp[(1) - (3)].node)->value.dVal+ (yyvsp[(3) - (3)].node)->value.dVal, scope , tempCount , false);
+                        insertQuad((yyvsp[(1) - (3)].node)->name , (yyvsp[(3) - (3)].node)->name , "+" , node->name , 0);
                         (yyval.node) = node;
                 }
                 else{
@@ -2051,18 +2039,22 @@ yyreduce:
   case 68:
 
 /* Line 1455 of yacc.c  */
-#line 342 "parser.y"
+#line 330 "parser.y"
     { 
         if((yyvsp[(1) - (3)].node)->dataType == (yyvsp[(3) - (3)].node)->dataType)
         {
                 if((yyvsp[(1) - (3)].node)->dataType == TYPE_INT)
                 {
-                        Node *node= createIntNode((yyvsp[(1) - (3)].node)->value.iVal- (yyvsp[(3) - (3)].node)->value.iVal, scope);
+                        tempCount++;
+                        Node *node= createIntNode((yyvsp[(1) - (3)].node)->value.iVal- (yyvsp[(3) - (3)].node)->value.iVal, scope , tempCount , false);
+                        insertQuad((yyvsp[(1) - (3)].node)->name , (yyvsp[(3) - (3)].node)->name , "-" , node->name , 0);
                         (yyval.node) = node;
                 }
                 else if((yyvsp[(1) - (3)].node)->dataType == TYPE_DOUBLE)
                 {
-                        Node *node= createDoubleNode((yyvsp[(1) - (3)].node)->value.dVal- (yyvsp[(3) - (3)].node)->value.dVal, scope);
+                        tempCount++;
+                        Node *node= createDoubleNode((yyvsp[(1) - (3)].node)->value.dVal- (yyvsp[(3) - (3)].node)->value.dVal, scope , tempCount , false);
+                        insertQuad((yyvsp[(1) - (3)].node)->name , (yyvsp[(3) - (3)].node)->name , "-" , node->name , 0);
                         (yyval.node) = node;
                 }
                 else {
@@ -2073,29 +2065,28 @@ yyreduce:
         {
                 printf("Error: Data Type Mismatch\n");
         }
-
-        
-
-
-
    }
     break;
 
   case 69:
 
 /* Line 1455 of yacc.c  */
-#line 369 "parser.y"
+#line 356 "parser.y"
     {     
         if((yyvsp[(1) - (3)].node)->dataType == (yyvsp[(3) - (3)].node)->dataType)
         {
                 if((yyvsp[(1) - (3)].node)->dataType == TYPE_INT)
                 {
-                        Node *node= createIntNode((yyvsp[(1) - (3)].node)->value.iVal* (yyvsp[(3) - (3)].node)->value.iVal, scope);
+                        tempCount++;
+                        Node *node= createIntNode((yyvsp[(1) - (3)].node)->value.iVal* (yyvsp[(3) - (3)].node)->value.iVal, scope , tempCount , false);
+                        insertQuad((yyvsp[(1) - (3)].node)->name , (yyvsp[(3) - (3)].node)->name , "*" , node->name , 0);
                         (yyval.node) = node;
                 }
                 else if((yyvsp[(1) - (3)].node)->dataType == TYPE_DOUBLE)
                 {
-                        Node *node= createDoubleNode((yyvsp[(1) - (3)].node)->value.dVal* (yyvsp[(3) - (3)].node)->value.dVal, scope);
+                        tempCount++;
+                        Node *node= createDoubleNode((yyvsp[(1) - (3)].node)->value.dVal* (yyvsp[(3) - (3)].node)->value.dVal, scope , tempCount , false);
+                        insertQuad((yyvsp[(1) - (3)].node)->name , (yyvsp[(3) - (3)].node)->name , "*" , node->name , 0);
                         (yyval.node) = node;
                 }
                 else {
@@ -2113,18 +2104,22 @@ yyreduce:
   case 70:
 
 /* Line 1455 of yacc.c  */
-#line 392 "parser.y"
+#line 383 "parser.y"
     { 
         if((yyvsp[(1) - (3)].node)->dataType == (yyvsp[(3) - (3)].node)->dataType )
         {
                 if((yyvsp[(1) - (3)].node)->dataType == TYPE_INT && (yyvsp[(3) - (3)].node)->value.iVal != 0)
                 {
-                        Node *node= createIntNode((yyvsp[(1) - (3)].node)->value.iVal/ (yyvsp[(3) - (3)].node)->value.iVal, scope);
+                        tempCount++;
+                        Node *node= createIntNode((yyvsp[(1) - (3)].node)->value.iVal/ (yyvsp[(3) - (3)].node)->value.iVal, scope, tempCount , false);
+                        insertQuad((yyvsp[(1) - (3)].node)->name , (yyvsp[(3) - (3)].node)->name , "/" , node->name , 0);
                         (yyval.node) = node;
                 }
                 else if((yyvsp[(1) - (3)].node)->dataType == TYPE_DOUBLE && (yyvsp[(3) - (3)].node)->value.dVal != 0)
                 {
-                        Node *node= createDoubleNode((yyvsp[(1) - (3)].node)->value.dVal/ (yyvsp[(3) - (3)].node)->value.dVal, scope);
+                        tempCount++;
+                        Node *node= createDoubleNode((yyvsp[(1) - (3)].node)->value.dVal/ (yyvsp[(3) - (3)].node)->value.dVal, scope , tempCount , false);
+                        insertQuad((yyvsp[(1) - (3)].node)->name , (yyvsp[(3) - (3)].node)->name , "/" , node->name , 0);
                         (yyval.node) = node;
                 }
                 else {
@@ -2141,21 +2136,21 @@ yyreduce:
   case 71:
 
 /* Line 1455 of yacc.c  */
-#line 414 "parser.y"
+#line 409 "parser.y"
     { (yyval.node) = (yyvsp[(2) - (3)].node); }
     break;
 
   case 72:
 
 /* Line 1455 of yacc.c  */
-#line 415 "parser.y"
+#line 410 "parser.y"
     {printf("Function Call\n");}
     break;
 
   case 73:
 
 /* Line 1455 of yacc.c  */
-#line 420 "parser.y"
+#line 415 "parser.y"
     {printf("Int Type\n");
         (yyval.dataType) = TYPE_INT;
         }
@@ -2164,7 +2159,7 @@ yyreduce:
   case 74:
 
 /* Line 1455 of yacc.c  */
-#line 423 "parser.y"
+#line 418 "parser.y"
     {printf("Double Type\n");
         (yyval.dataType) = TYPE_DOUBLE;
         }
@@ -2173,7 +2168,7 @@ yyreduce:
   case 75:
 
 /* Line 1455 of yacc.c  */
-#line 426 "parser.y"
+#line 421 "parser.y"
     {printf("Bool Type \n");
         (yyval.dataType) = TYPE_BOOL;
         }
@@ -2182,7 +2177,7 @@ yyreduce:
   case 76:
 
 /* Line 1455 of yacc.c  */
-#line 429 "parser.y"
+#line 424 "parser.y"
     {printf("Char Type\n");
         (yyval.dataType) = TYPE_CHAR;
         }
@@ -2191,7 +2186,7 @@ yyreduce:
   case 77:
 
 /* Line 1455 of yacc.c  */
-#line 432 "parser.y"
+#line 427 "parser.y"
     {printf("String Type\n");
         (yyval.dataType) = TYPE_STRING;
         }
@@ -2200,7 +2195,7 @@ yyreduce:
   case 78:
 
 /* Line 1455 of yacc.c  */
-#line 435 "parser.y"
+#line 430 "parser.y"
     {printf("Void Type\n");
         (yyval.dataType) = TYPE_VOID;
         }
@@ -2209,7 +2204,7 @@ yyreduce:
   case 79:
 
 /* Line 1455 of yacc.c  */
-#line 441 "parser.y"
+#line 436 "parser.y"
     {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(1) - (2)].sval));
@@ -2228,6 +2223,7 @@ yyreduce:
                         if(flag){
                                 SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
                                 modifyentry(currTable, entry->name , newEntry);
+                                insertQuad(NULL, NULL , "++" , (yyvsp[(1) - (2)].sval) , 0);
                         }
                 }
                 else {
@@ -2239,7 +2235,7 @@ yyreduce:
   case 80:
 
 /* Line 1455 of yacc.c  */
-#line 465 "parser.y"
+#line 461 "parser.y"
     {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(1) - (2)].sval));
@@ -2257,7 +2253,9 @@ yyreduce:
                         if(flag){
                                 SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
                                 modifyentry(currTable, entry->name , newEntry);
-                                }
+                                insertQuad(NULL, NULL , "--" , (yyvsp[(1) - (2)].sval) , 0);        
+                        }
+
                 }
                 else {
                         printf("Error: Variable not declared\n");
@@ -2268,7 +2266,7 @@ yyreduce:
   case 81:
 
 /* Line 1455 of yacc.c  */
-#line 488 "parser.y"
+#line 486 "parser.y"
     {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(2) - (2)].sval));
@@ -2286,6 +2284,7 @@ yyreduce:
                         if(flag){
                                 SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
                                 modifyentry(currTable, entry->name , newEntry);
+                                insertQuad(NULL, NULL , "++" , (yyvsp[(2) - (2)].sval) , 0);
                         }
                 }
                 else {
@@ -2297,7 +2296,7 @@ yyreduce:
   case 82:
 
 /* Line 1455 of yacc.c  */
-#line 511 "parser.y"
+#line 510 "parser.y"
     {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(2) - (2)].sval));
@@ -2315,6 +2314,7 @@ yyreduce:
                         if(flag){
                                 SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value, true ,0, entry->type);
                                 modifyentry(currTable, entry->name , newEntry);
+                                insertQuad(NULL, NULL , "--" , (yyvsp[(2) - (2)].sval) , 0);
                         }
                         
                 }
@@ -2378,7 +2378,6 @@ yyreduce:
                 if(entry != NULL && entry->kind != constant){
                         if (entry->type == (yyvsp[(3) - (3)].node)->dataType)
                         {
-
                                 if((yyvsp[(2) - (3)].sval) == "="){
                                         if (entry->type == TYPE_INT){
                                                 entry->value.iVal = (yyvsp[(3) - (3)].node)->value.iVal;
@@ -2395,9 +2394,10 @@ yyreduce:
                                         else if (entry->type == TYPE_STRING){
                                                 entry->value.strVal = (yyvsp[(3) - (3)].node)->value.strVal;
                                         }
+                                        insertQuad((yyvsp[(3) - (3)].node)->name , NULL , "=" , (yyvsp[(1) - (3)].sval) , 0);
                                
                                 }           
-                                else if((yyvsp[(2) - (3)].sval) == "+="){
+                                else if((yyvsp[(2) - (3)].sval) == "+=" && entry->isInitialized){
                                         if (entry->type == TYPE_INT){
                                                 entry->value.iVal += (yyvsp[(3) - (3)].node)->value.iVal;
                                         }
@@ -2407,9 +2407,10 @@ yyreduce:
                                         else {
                                                 printf("Error: Data Type Mismatch\n");
                                         }
+                                        insertQuad((yyvsp[(1) - (3)].sval),(yyvsp[(3) - (3)].node)->name  , "+" , (yyvsp[(1) - (3)].sval) , 0);
                                
                                 }
-                                else if((yyvsp[(2) - (3)].sval) == "-="){
+                                else if((yyvsp[(2) - (3)].sval) == "-=" && entry->isInitialized){
                                         if (entry->type == TYPE_INT){
                                                 entry->value.iVal -= (yyvsp[(3) - (3)].node)->value.iVal;
                                         }
@@ -2419,9 +2420,10 @@ yyreduce:
                                         else {
                                                 printf("Error: Data Type Mismatch\n");
                                         }
+                                        insertQuad( (yyvsp[(1) - (3)].sval) ,(yyvsp[(3) - (3)].node)->name  , "-" , (yyvsp[(1) - (3)].sval) , 0);
                                 
                                 }
-                                else if((yyvsp[(2) - (3)].sval) == "*="){
+                                else if((yyvsp[(2) - (3)].sval) == "*=" && entry->isInitialized){
                                         if (entry->type == TYPE_INT){
                                                 entry->value.iVal *= (yyvsp[(3) - (3)].node)->value.iVal;
                                         }
@@ -2431,9 +2433,10 @@ yyreduce:
                                         else {
                                                 printf("Error: Data Type Mismatch\n");
                                         }
+                                        insertQuad((yyvsp[(1) - (3)].sval) , (yyvsp[(3) - (3)].node)->name  , "*" , (yyvsp[(1) - (3)].sval) , 0);
                                 
                                 }
-                                else if((yyvsp[(2) - (3)].sval) == "/="){
+                                else if((yyvsp[(2) - (3)].sval) == "/=" && entry->isInitialized){
                                         if (entry->type == TYPE_INT){
                                                 entry->value.iVal /= (yyvsp[(3) - (3)].node)->value.iVal;
                                         }
@@ -2443,9 +2446,12 @@ yyreduce:
                                         else {
                                                 printf("Error: Data Type Mismatch\n");
                                         }
-                                
+                                        insertQuad((yyvsp[(1) - (3)].sval) , (yyvsp[(3) - (3)].node)->name  , "/" , (yyvsp[(1) - (3)].sval) , 0);
 
                                 
+                                }
+                                else {
+                                        printf("Error: Variable not declared\n");
                                 }
                                 SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
                                 modifyentry(currTable, entry->name , newEntry);
@@ -2463,7 +2469,7 @@ yyreduce:
 
 
 /* Line 1455 of yacc.c  */
-#line 2467 "y.tab.c"
+#line 2473 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2675,7 +2681,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 643 "parser.y"
+#line 649 "parser.y"
 
 int yyerror(char *s) {
     fprintf(stderr, "Error:  %s %d\n", s , yylineno- 1);
@@ -2700,6 +2706,7 @@ int main(int argc, char **argv) {
     if (yyparse() == 0) {
         printf("Parsing successful\n");
         printTable(globalTable);
+        printQuadrables();
         return 0;
     } else {
         printf("Parsing failed\n");

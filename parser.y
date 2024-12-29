@@ -6,6 +6,7 @@
 #include "Node.h"
 #include "symboltable.h"
 #include "symbolentry.h"
+#include "quad.h"
 
 
 extern int yylineno;
@@ -21,6 +22,7 @@ SymbolTable *tempTable;
 int scope = 0;
 // extern int yylineno;
 //symbol entry
+int tempCount = 0;
 %}
 
 %union {
@@ -200,6 +202,7 @@ special_declaration:
         CONST data_type IDENTIFIER EQU expression SEMICOLON   {    
                 SymbolEntry *entry=createSymbolEntry($3, constant, $5->value,true,0,$2, 1, 0, NULL, "");
                 addEntryToTable(currTable, entry);
+                insertQuad($5->name , NULL , "=" , $3 , 0);
 
         }
         | unary_expression SEMICOLON                   
@@ -215,22 +218,25 @@ special_declaration:
         ;
 default_declaration:
         data_type IDENTIFIER EQU expression SEMICOLON {  
-                printf("Default Declaration \n" ); 
+                printf(" Default Declaration Data Type: %d data type el tanyyy %d\n", $1 , $4->dataType); 
                 if($1 == $4->dataType){
                         if ($1 == TYPE_INT){
+                                insertQuad($4->name , NULL , "=" , $2 , 0);
                                 SymbolEntry* entry= createSymbolEntryWithDefaults($2, var, $4->value,true,0, $1);
                                 addEntryToTable(currTable, entry);
                         }
                         else if ($1 == TYPE_DOUBLE){
+                                insertQuad($4->name , NULL , "=" , $2 , 0);
                                 SymbolEntry* entry= createSymbolEntryWithDefaults($2, var, $4->value,true,0, $1);
                                 addEntryToTable(currTable, entry);
                         }
                         else if ($1 == TYPE_BOOL){
-                                printf("Bool ana geet\n");
+                                insertQuad($4->name , NULL , "=" , $2 , 0);
                                 SymbolEntry* entry= createSymbolEntryWithDefaults($2, var, $4->value,true,0, $1);
                                 addEntryToTable(currTable, entry);
                         }
                         else if ($1 == TYPE_CHAR){
+
                                 SymbolEntry* entry= createSymbolEntryWithDefaults($2, var, $4->value,true,0, $1);
                                 addEntryToTable(currTable, entry);
                         }
@@ -256,60 +262,40 @@ func_call:
         ;
 
 expression:
-        INTEGER     { 
-                        Node *node= createIntNode($1 , scope);
+        INTEGER     {
+                        Node *node= createIntNode($1 , scope , tempCount , true);
                         $$ = node; 
                         printf("Integer: %d\n", $1);
                 }
         | DOUBLE      { 
-                                Node *node= createDoubleNode($1, scope);
+                                Node *node= createDoubleNode($1, scope , tempCount , true);
                                 $$ = node;
                                 printf("Double: %f\n", $1);
                         }
         | CHAR          { 
-                                Node *node= createCharNode($1, scope);
+                                Node *node= createCharNode($1, scope , tempCount , true);
                                 $$ = node;
                                 printf("Char: %c\n", $1);
                         }
         | STRING        { 
-                                Node *node= createStringNode($1, scope);
+                                Node *node= createStringNode($1, scope, tempCount , true);
                                 $$ = node;
                                 printf("String: %s\n", $1);
                         }
         | IDENTIFIER {
-        printf("Identifier:%s \n", $1);
         SymbolEntry *entry = getentryfromalltables(currTable, $1);
+        printf("Identifier:%s intialized %d \n", $1 , entry->isInitialized ? 1 : 0);
         if(entry != NULL && entry->isInitialized){
-                if (entry->type == TYPE_INT){
-                        printf("Int BADR: %d\n", entry->value.iVal);
-                        Node *node= createIntNode(entry->value.iVal, scope);
-                        $$ = node;
-                }
-                else if (entry->type == TYPE_DOUBLE){
-                        Node *node= createDoubleNode(entry->value.dVal, scope);
-                        $$ = node;
-                }    else if (entry->type == TYPE_BOOL){
-                        Node *node= createBoolNode(entry->value.bVal, scope);
-                        $$ = node;
-                }
-            
-                else if (entry->type == TYPE_CHAR){
-                        Node *node= createCharNode(entry->value.cVal, scope);
-                        $$ = node;
-                }
-                else if (entry->type == TYPE_STRING){
-                        Node *node= createStringNode(entry->value.strVal, scope);
-                        $$ = node;
-                }
-
-             
+                Node* node = createIDNode($1, scope, entry->type);
+                node->value = entry->value;
+                $$ = node;
         }
         else{
                 printf("Error: Variable not declared or intialized\n");
         }
         
         }
-| BOOLEAN {
+        | BOOLEAN {
 
      
                         Node *node= createBoolNode($1, scope);
@@ -318,15 +304,19 @@ expression:
 
 }
  
-        
+       
   | expression PLUS expression {
         if ($1->dataType == $3->dataType){
                 if ($1->dataType == TYPE_INT){
-                        Node *node= createIntNode($1->value.iVal+ $3->value.iVal, scope);
+                        tempCount++;
+                        Node *node= createIntNode($1->value.iVal+ $3->value.iVal, scope , tempCount , false);
+                        insertQuad($1->name , $3->name , "+" , node->name , 0);
                         $$ = node;
                 }
                 else if ($1->dataType == TYPE_DOUBLE){
-                        Node *node= createDoubleNode($1->value.dVal+ $3->value.dVal, scope);
+                        tempCount++;
+                        Node *node= createDoubleNode($1->value.dVal+ $3->value.dVal, scope , tempCount , false);
+                        insertQuad($1->name , $3->name , "+" , node->name , 0);
                         $$ = node;
                 }
                 else{
@@ -344,12 +334,16 @@ expression:
         {
                 if($1->dataType == TYPE_INT)
                 {
-                        Node *node= createIntNode($1->value.iVal- $3->value.iVal, scope);
+                        tempCount++;
+                        Node *node= createIntNode($1->value.iVal- $3->value.iVal, scope , tempCount , false);
+                        insertQuad($1->name , $3->name , "-" , node->name , 0);
                         $$ = node;
                 }
                 else if($1->dataType == TYPE_DOUBLE)
                 {
-                        Node *node= createDoubleNode($1->value.dVal- $3->value.dVal, scope);
+                        tempCount++;
+                        Node *node= createDoubleNode($1->value.dVal- $3->value.dVal, scope , tempCount , false);
+                        insertQuad($1->name , $3->name , "-" , node->name , 0);
                         $$ = node;
                 }
                 else {
@@ -360,23 +354,22 @@ expression:
         {
                 printf("Error: Data Type Mismatch\n");
         }
-
-        
-
-
-
    }
   | expression MULT expression {     
         if($1->dataType == $3->dataType)
         {
                 if($1->dataType == TYPE_INT)
                 {
-                        Node *node= createIntNode($1->value.iVal* $3->value.iVal, scope);
+                        tempCount++;
+                        Node *node= createIntNode($1->value.iVal* $3->value.iVal, scope , tempCount , false);
+                        insertQuad($1->name , $3->name , "*" , node->name , 0);
                         $$ = node;
                 }
                 else if($1->dataType == TYPE_DOUBLE)
                 {
-                        Node *node= createDoubleNode($1->value.dVal* $3->value.dVal, scope);
+                        tempCount++;
+                        Node *node= createDoubleNode($1->value.dVal* $3->value.dVal, scope , tempCount , false);
+                        insertQuad($1->name , $3->name , "*" , node->name , 0);
                         $$ = node;
                 }
                 else {
@@ -394,12 +387,16 @@ expression:
         {
                 if($1->dataType == TYPE_INT && $3->value.iVal != 0)
                 {
-                        Node *node= createIntNode($1->value.iVal/ $3->value.iVal, scope);
+                        tempCount++;
+                        Node *node= createIntNode($1->value.iVal/ $3->value.iVal, scope, tempCount , false);
+                        insertQuad($1->name , $3->name , "/" , node->name , 0);
                         $$ = node;
                 }
                 else if($1->dataType == TYPE_DOUBLE && $3->value.dVal != 0)
                 {
-                        Node *node= createDoubleNode($1->value.dVal/ $3->value.dVal, scope);
+                        tempCount++;
+                        Node *node= createDoubleNode($1->value.dVal/ $3->value.dVal, scope , tempCount , false);
+                        insertQuad($1->name , $3->name , "/" , node->name , 0);
                         $$ = node;
                 }
                 else {
@@ -456,6 +453,7 @@ unary_expression:
                         if(flag){
                                 SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
                                 modifyentry(currTable, entry->name , newEntry);
+                                insertQuad(NULL, NULL , "++" , $1 , 0);
                         }
                 }
                 else {
@@ -479,7 +477,9 @@ unary_expression:
                         if(flag){
                                 SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
                                 modifyentry(currTable, entry->name , newEntry);
-                                }
+                                insertQuad(NULL, NULL , "--" , $1 , 0);        
+                        }
+
                 }
                 else {
                         printf("Error: Variable not declared\n");
@@ -502,6 +502,7 @@ unary_expression:
                         if(flag){
                                 SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
                                 modifyentry(currTable, entry->name , newEntry);
+                                insertQuad(NULL, NULL , "++" , $2 , 0);
                         }
                 }
                 else {
@@ -525,6 +526,7 @@ unary_expression:
                         if(flag){
                                 SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value, true ,0, entry->type);
                                 modifyentry(currTable, entry->name , newEntry);
+                                insertQuad(NULL, NULL , "--" , $2 , 0);
                         }
                         
                 }
@@ -558,7 +560,6 @@ assign_expression:
                 if(entry != NULL && entry->kind != constant){
                         if (entry->type == $3->dataType)
                         {
-
                                 if($2 == "="){
                                         if (entry->type == TYPE_INT){
                                                 entry->value.iVal = $3->value.iVal;
@@ -575,9 +576,10 @@ assign_expression:
                                         else if (entry->type == TYPE_STRING){
                                                 entry->value.strVal = $3->value.strVal;
                                         }
+                                        insertQuad($3->name , NULL , "=" , $1 , 0);
                                
                                 }           
-                                else if($2 == "+="){
+                                else if($2 == "+=" && entry->isInitialized){
                                         if (entry->type == TYPE_INT){
                                                 entry->value.iVal += $3->value.iVal;
                                         }
@@ -587,9 +589,10 @@ assign_expression:
                                         else {
                                                 printf("Error: Data Type Mismatch\n");
                                         }
+                                        insertQuad($1,$3->name  , "+" , $1 , 0);
                                
                                 }
-                                else if($2 == "-="){
+                                else if($2 == "-=" && entry->isInitialized){
                                         if (entry->type == TYPE_INT){
                                                 entry->value.iVal -= $3->value.iVal;
                                         }
@@ -599,9 +602,10 @@ assign_expression:
                                         else {
                                                 printf("Error: Data Type Mismatch\n");
                                         }
+                                        insertQuad( $1 ,$3->name  , "-" , $1 , 0);
                                 
                                 }
-                                else if($2 == "*="){
+                                else if($2 == "*=" && entry->isInitialized){
                                         if (entry->type == TYPE_INT){
                                                 entry->value.iVal *= $3->value.iVal;
                                         }
@@ -611,9 +615,10 @@ assign_expression:
                                         else {
                                                 printf("Error: Data Type Mismatch\n");
                                         }
+                                        insertQuad($1 , $3->name  , "*" , $1 , 0);
                                 
                                 }
-                                else if($2 == "/="){
+                                else if($2 == "/=" && entry->isInitialized){
                                         if (entry->type == TYPE_INT){
                                                 entry->value.iVal /= $3->value.iVal;
                                         }
@@ -623,9 +628,12 @@ assign_expression:
                                         else {
                                                 printf("Error: Data Type Mismatch\n");
                                         }
-                                
+                                        insertQuad($1 , $3->name  , "/" , $1 , 0);
 
                                 
+                                }
+                                else {
+                                        printf("Error: Variable not declared\n");
                                 }
                                 SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
                                 modifyentry(currTable, entry->name , newEntry);
@@ -664,6 +672,7 @@ int main(int argc, char **argv) {
     if (yyparse() == 0) {
         printf("Parsing successful\n");
         printTable(globalTable);
+        printQuadrables();
         return 0;
     } else {
         printf("Parsing failed\n");

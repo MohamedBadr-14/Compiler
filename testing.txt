@@ -1,0 +1,8 @@
+result = t1 , src1 =  5 , src2 =  3 opr = 3  forend = 0
+result = t2 , src1 = t1 , src2 =  4 opr = 4  forend = 0
+result = t3 , src1 = t2 , src2 =  8 opr = 3  forend = 0
+result = x , src1 = t3 , src2 = # opr = 0  forend = 0
+result = y , src1 =  3 , src2 = # opr = 0  forend = 0
+result = t4 , src1 = y , src2 =  1 opr = 3  forend = 0
+result = x , src1 = x , src2 = t4 opr = 4  forend = 0
+result = y , src1 = # , src2 = # opr = 17  forend = 0
