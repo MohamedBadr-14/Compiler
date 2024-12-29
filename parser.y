@@ -7,6 +7,8 @@
 #include "symboltable.h"
 #include "symbolentry.h"
 
+static int first_sem_err = 1;
+static int first_syn_err = 1;
 const char *filename;
 extern int yylineno;
 int yylex(void);
@@ -23,14 +25,17 @@ int scope = 0;
 //symbol entry
 
 void logError(const char *message, int line_num) {
-        FILE *errorFile = fopen("errors.txt", "a");
-        if (errorFile == NULL)
-        {
-                perror("Error opening errors.txt");
-                exit(-1);
+        FILE *errorFile;
+        if (first_sem_err) {
+                errorFile = fopen("semantic_errors.txt", "w");
+                fprintf(errorFile, "%s: Error at line %d: %s\n", filename, line_num, message);
+                first_sem_err = 0;
+        } else {
+                errorFile = fopen("semantic_errors.txt", "a");
+                fprintf(errorFile, "%s: Error at line %d: %s\n", filename, line_num, message);
         }
-        fprintf(errorFile, "%s: Error at line %d: %s\n", filename, line_num, message);
-        // fprintf(stderr, "%s: Error at line %d: %s\n", filename, line_num, message);
+        fclose(errorFile);
+        fprintf(stderr, "%s: Error at line %d: %s\n", filename, line_num, message);
         //     exit(-1);
 }
 %}
@@ -339,7 +344,7 @@ expression:
                         Node *node= createDoubleNode($1->value.dVal+ $3->value.dVal, scope);
                         $$ = node;
                 }
-                else logError("Syntax error. Only int and double can use this operator.", yylineno);
+                else logError("Only int and double can use this operator.", yylineno);
         }
         else logError("Data type mismatch.", yylineno);
      
@@ -357,7 +362,7 @@ expression:
                         Node *node= createDoubleNode($1->value.dVal- $3->value.dVal, scope);
                         $$ = node;
                 }
-                else logError("Syntax error. Only int and double can use this operator.", yylineno);
+                else logError("Only int and double can use this operator.", yylineno);
         }
         else logError("Data type mismatch.", yylineno);
 
@@ -376,7 +381,7 @@ expression:
                         Node *node= createDoubleNode($1->value.dVal* $3->value.dVal, scope);
                         $$ = node;
                 }
-                else logError("Syntax error. Only int and double can use this operator.", yylineno);
+                else logError("Only int and double can use this operator.", yylineno);
         }
         else logError("Data type mismatch.", yylineno);
 
@@ -402,7 +407,7 @@ expression:
                         $$ = node;
                         }
                 }
-                else logError("Syntax error. Only int and double can use this operator.", yylineno);
+                else logError("Only int and double can use this operator.", yylineno);
         }
         else logError("Data type mismatch.", yylineno);
 }
@@ -587,10 +592,7 @@ assign_expression:
                                         else if (entry->type == TYPE_DOUBLE){
                                                 entry->value.dVal += $3->value.dVal;
                                         }
-                                        else {
-                                                logError("Data type mismatch.", yylineno);
-                                                exit(-1);
-                                        }
+                                        else logError("Data type mismatch.", yylineno);
                                
                                 }
                                 else if($2 == "-="){
@@ -630,8 +632,17 @@ assign_expression:
 
 %%
 int yyerror(char *s) {
-    fprintf(stderr, "Error:  %s %d\n", s , yylineno- 1);
-    return 1;
+        FILE* syntaxErrorFile;
+        if (first_syn_err == 1) {
+                syntaxErrorFile = fopen("syntax_errors.txt", "w");
+                fprintf(syntaxErrorFile, "%s: %s at line %d\n", filename, s, yylineno);
+                first_syn_err = 0;
+        } else {
+                syntaxErrorFile = fopen("syntax_errors.txt", "a");
+                fprintf(syntaxErrorFile, "%s: %s at line %d\n", filename, s , yylineno);
+        }
+        fprintf(stderr, "%s %d\n", s , yylineno);
+        return 1;
 }
 
 int main(int argc, char **argv) {
