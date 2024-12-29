@@ -23,8 +23,15 @@ int scope = 0;
 //symbol entry
 
 void logError(const char *message, int line_num) {
-    fprintf(stderr, "%s: Error at line %d: %s\n", filename, line_num, message);
-    exit(-1);
+        FILE *errorFile = fopen("errors.txt", "a");
+        if (errorFile == NULL)
+        {
+                perror("Error opening errors.txt");
+                exit(-1);
+        }
+        fprintf(errorFile, "%s: Error at line %d: %s\n", filename, line_num, message);
+        // fprintf(stderr, "%s: Error at line %d: %s\n", filename, line_num, message);
+        //     exit(-1);
 }
 %}
 
