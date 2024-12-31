@@ -1,13 +1,13 @@
-int x = 2;
-int xee(int x , int z , bool y)
-{
-    x = 3;
-}
-
-int y = 2;
-
-bool zee(double z , int y){
-    y++;
-}
-
-x = xee(y , 1 , true);
+int x = 10;
+do{
+    int z=1;
+    x++;
+    do{
+        z=1;
+        x++;
+        do{
+            z=10;
+            x++;
+        }while(x>1);
+    }while(x>1);
+}while(x>1);

@@ -354,6 +354,8 @@ func_call:
                                 char* end = concatenateStrings( $1, "_END");
                                 insertQuad(NULL , NULL , "LABEL" , end , 0);
                                 Node* node = createIDNode($1, scope, entry->type);
+                                printf("BADR FUNCTION CALLL %d\n" , entry->type);
+                                paramCount = 0;
                                 $$ = node;
                         }
                         else{
@@ -597,7 +599,7 @@ conditional_expression:
                 if($1->nodeType == NODE_ID)
                 {
                         printf("Conditional Expression\n");
-                Node * boolNode = handleConditionalExpression($1);
+                        Node * boolNode = handleConditionalExpression($1);
                 if (boolNode != NULL){
                         printf("3azeemm %d\n" , boolNode->value.bVal ? 1:0);
                         $$ = boolNode;
@@ -607,7 +609,7 @@ conditional_expression:
                 }
                 }
                 else {
-                        printf("GHALATTTTTT");
+                        printf("GHALATTTTTT\n");
                 }
         }
         | condition_only {$$=$1;}
@@ -621,50 +623,67 @@ conditional_expression:
 
 special_declaration:
         CONST data_type IDENTIFIER EQU expression_statement SEMICOLON   {
-                if ($2 == $5->dataType){
-                        if ($2 == TYPE_INT){
-                                SymbolEntry *entry=createSymbolEntry($3, constant, $5->value,true,0,$2, 1, 0, NULL, "");
-                                addEntryToTable(currTable, entry);
-                                insertQuad($5->name , NULL , "=" , $3 , 0);
+                SymbolEntry *entry = getentryfromalltables(currTable, $3);
+                if(entry == NULL)
+                {
+                        if ($2 == $5->dataType){
+                                if ($2 == TYPE_INT){
+                                        SymbolEntry *entry=createSymbolEntry($3, constant, $5->value,true,0,$2, 1, 0, NULL, "");
+                                        addEntryToTable(currTable, entry);
+                                        insertQuad($5->name , NULL , "=" , $3 , 0);
+                                }
+                                else if ($2 == TYPE_DOUBLE){
+                                        SymbolEntry *entry=createSymbolEntry($3, constant, $5->value,true,0,$2, 1, 0, NULL, "");
+                                        addEntryToTable(currTable, entry);
+                                        insertQuad($5->name , NULL , "=" , $3 , 0);
+                                }
+                                else if ($2 == TYPE_BOOL){
+                                        SymbolEntry *entry=createSymbolEntry($3, constant, $5->value,true,0,$2, 1, 0, NULL, "");
+                                        addEntryToTable(currTable, entry);
+                                        insertQuad($5->name , NULL , "=" , $3 , 0);
+                                }
+                                else if ($2 == TYPE_CHAR){
+                                        SymbolEntry *entry=createSymbolEntry($3, constant, $5->value,true,0,$2, 1, 0, NULL, "");
+                                        addEntryToTable(currTable, entry);
+                                        insertQuad($5->name , NULL , "=" , $3 , 0);
+                                }
+                                else if ($2 == TYPE_STRING){
+                                        SymbolEntry *entry=createSymbolEntry($3, constant, $5->value,true,0,$2, 1, 0, NULL, "");
+                                        addEntryToTable(currTable, entry);
+                                        insertQuad($5->name , NULL , "=" , $3 , 0);
+                                }
                         }
-                        else if ($2 == TYPE_DOUBLE){
-                                SymbolEntry *entry=createSymbolEntry($3, constant, $5->value,true,0,$2, 1, 0, NULL, "");
-                                addEntryToTable(currTable, entry);
-                                insertQuad($5->name , NULL , "=" , $3 , 0);
-                        }
-                        else if ($2 == TYPE_BOOL){
-                                SymbolEntry *entry=createSymbolEntry($3, constant, $5->value,true,0,$2, 1, 0, NULL, "");
-                                addEntryToTable(currTable, entry);
-                                insertQuad($5->name , NULL , "=" , $3 , 0);
-                        }
-                        else if ($2 == TYPE_CHAR){
-                                SymbolEntry *entry=createSymbolEntry($3, constant, $5->value,true,0,$2, 1, 0, NULL, "");
-                                addEntryToTable(currTable, entry);
-                                insertQuad($5->name , NULL , "=" , $3 , 0);
-                        }
-                        else if ($2 == TYPE_STRING){
-                                SymbolEntry *entry=createSymbolEntry($3, constant, $5->value,true,0,$2, 1, 0, NULL, "");
-                                addEntryToTable(currTable, entry);
-                                insertQuad($5->name , NULL , "=" , $3 , 0);
+                        else{
+                                printf("Error: Data Type Mismatch\n");
                         }
                 }
-                else{
-                        printf("Error: Data Type Mismatch\n");
+                else {
+                        printf("Error: Varibale already declared\n");
                 }
 
         }
         | unary_expression SEMICOLON                   
         | data_type IDENTIFIER SEMICOLON      {
                 printf("Data Type Identifier\n");
-                union Value val;
-                SymbolEntry* entry= createSymbolEntryWithDefaults($2, var,val,false,0,$1); 
-                addEntryToTable(currTable, entry);
+                SymbolEntry * entry = getentryfromalltables(currTable, $2);
+                if(entry == NULL)
+                {       
+                        union Value val;
+                        SymbolEntry* entry= createSymbolEntryWithDefaults($2, var,val,false,0,$1); 
+                        addEntryToTable(currTable, entry);
+                }
+                else{
+                        printf("ERROR: VARIABLE ALREADY DECLARED\n");
+                }
         }
         ;
 default_declaration:
         data_type IDENTIFIER EQU expression_statement SEMICOLON {  
                 printf(" Default Declaration Data Type: %d data type el tanyyy %d\n", $1 , $4->dataType); 
-                if($1 == $4->dataType){
+                SymbolEntry *entry = getentryfromalltables(currTable, $2);
+                if(entry == NULL)
+                {
+                        if($1 == $4->dataType){
                         if ($1 == TYPE_INT){
                                 insertQuad($4->name , NULL , "=" , $2 , 0);
                                 SymbolEntry* entry= createSymbolEntryWithDefaults($2, var, $4->value,true,0, $1);
@@ -695,6 +714,10 @@ default_declaration:
                 }
                 else{
                         printf("Error: Data Type Mismatch\n");
+                }
+                }
+                else {
+                        printf("Error: Variable already declared\n");
                 }
 
             
@@ -873,7 +896,7 @@ expression:
         }
         }
         | LEFT_ROUND expression RIGHT_ROUND { $$ = $2; }
-        | func_call {printf("Function Call BADRRRRRRRRRRRRR\n");}
+        | func_call {$$ = $1;}
 ;
 
 
@@ -903,20 +926,7 @@ unary_expression:
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
                 if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param) ){
-                        if (entry->type == TYPE_INT){
-                                entry->value.iVal++;
-                                
-                        }
-                        else if (entry->type == TYPE_DOUBLE){
-                                entry->value.dVal++;
-                        }
-                        else {
-                                flag = 0;
-                                printf("Error: Data Type Mismatch\n");
-                        }
-                        if(flag){
-                                // SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
-                                // modifyentry(currTable, entry->name , newEntry);
+                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
                                 insertQuad(NULL, NULL , "++" , $1 , 0);
                         }
                 }
@@ -929,19 +939,7 @@ unary_expression:
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
                 if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param) ){
                         if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
-                                entry->value.iVal--;
-                        }
-                        else if (entry->type == TYPE_DOUBLE){
-                                entry->value.dVal--;
-                        }
-                        else {
-                                printf("Error: Data Type Mismatch\n");
-                                flag = 0;
-                        }
-                        if(flag){
-                                // SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
-                                // modifyentry(currTable, entry->name , newEntry);
-                                insertQuad(NULL, NULL , "--" , $1 , 0);        
+                               insertQuad(NULL, NULL , "--" , $1 , 0);        
                         }
 
                 }
@@ -953,19 +951,7 @@ unary_expression:
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $2);
                 if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param) ){
-                        if (entry->type == TYPE_INT){
-                                entry->value.iVal++;
-                        }
-                        else if (entry->type == TYPE_DOUBLE){
-                                entry->value.dVal++;
-                        }
-                        else {
-                                printf("Error: Data Type Mismatch\n");
-                                flag = 0;
-                        }
-                        if(flag){
-                                SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
-                                modifyentry(currTable, entry->name , newEntry);
+                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){                    
                                 insertQuad(NULL, NULL , "++" , $2 , 0);
                         }
                 }
@@ -977,19 +963,7 @@ unary_expression:
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $2);
                 if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param)){
-                        if (entry->type == TYPE_INT){
-                                entry->value.iVal--;
-                        }
-                        else if (entry->type == TYPE_DOUBLE){
-                                entry->value.dVal--;
-                        }
-                        else {
-                                printf("Error: Data Type Mismatch\n");
-                                flag = 0;
-                        }
-                        if(flag){
-                                SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value, true ,0, entry->type);
-                                modifyentry(currTable, entry->name , newEntry);
+                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
                                 insertQuad(NULL, NULL , "--" , $2 , 0);
                         }
                         
@@ -1026,85 +1000,27 @@ assign_expression:
                         {
                                 int flage = 1;
                                 if($2 == "="){
-                                        if (entry->type == TYPE_INT){
-                                                entry->value.iVal = $3->value.iVal;
-                                        }
-                                        else if (entry->type == TYPE_DOUBLE){
-                                                entry->value.dVal = $3->value.dVal;
-                                        }
-                                        else if (entry->type == TYPE_BOOL){
-                                                entry->value.bVal = $3->value.bVal;
-                                        }
-                                        else if (entry->type == TYPE_CHAR){
-                                                entry->value.cVal = $3->value.cVal;
-                                        }
-                                        else if (entry->type == TYPE_STRING){
-                                                entry->value.strVal = $3->value.strVal;
-                                        }
                                         insertQuad($3->name , NULL , "=" , $1 , 0);
                                
                                 }           
                                 else if($2 == "+=" && entry->isInitialized){
-                                        if (entry->type == TYPE_INT){
-                                                entry->value.iVal += $3->value.iVal;
-                                        }
-                                        else if (entry->type == TYPE_DOUBLE){
-                                                entry->value.dVal += $3->value.dVal;
-                                        }
-                                        else {
-                                                printf("Error: Data Type Mismatch\n");
-                                        }
                                         insertQuad($1,$3->name  , "+" , $1 , 0);
                                
                                 }
                                 else if($2 == "-=" && entry->isInitialized){
-                                        if (entry->type == TYPE_INT){
-                                                entry->value.iVal -= $3->value.iVal;
-                                        }
-                                        else if (entry->type == TYPE_DOUBLE){
-                                                entry->value.dVal -= $3->value.dVal;
-                                        }
-                                        else {
-                                                printf("Error: Data Type Mismatch\n");
-                                        }
                                         insertQuad( $1 ,$3->name  , "-" , $1 , 0);
                                 
                                 }
                                 else if($2 == "*=" && entry->isInitialized){
-                                        if (entry->type == TYPE_INT){
-                                                entry->value.iVal *= $3->value.iVal;
-                                        }
-                                        else if (entry->type == TYPE_DOUBLE){
-                                                entry->value.dVal *= $3->value.dVal;
-                                        }
-                                        else {
-                                                printf("Error: Data Type Mismatch\n");
-                                        }
                                         insertQuad($1 , $3->name  , "*" , $1 , 0);
                                 
                                 }
                                 else if($2 == "/=" && entry->isInitialized){
-                                        if (entry->type == TYPE_INT){
-                                                entry->value.iVal /= $3->value.iVal;
-                                        }
-                                        else if (entry->type == TYPE_DOUBLE){
-                                                entry->value.dVal /= $3->value.dVal;
-                                        }
-                                        else {
-                                                printf("Error: Data Type Mismatch\n");
-                                        }
                                         insertQuad($1 , $3->name  , "/" , $1 , 0);
-
-                                
                                 }
                                 else {
                                         flage=0;
                                         printf("Error: Variable not declared\n");
-                                }
-                                if(flage)
-                                {
-                                        SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
-                                        modifyentry(currTable, entry->name , newEntry);
                                 }
                         }
                         else{

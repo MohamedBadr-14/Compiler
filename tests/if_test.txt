@@ -1,7 +1,7 @@
 int x = 0;
 if(false){
     x++;
-    if(true){
+    if(x==10){
         x++;
     }   
     else{
@@ -9,11 +9,11 @@ if(false){
     }
 }
 else {
-    if(true){
+    if(x>5){
         x++;
     }   
     else{
-        x++;
+        x--;
     }
     int y = 0 ;
 }

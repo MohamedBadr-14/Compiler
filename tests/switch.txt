@@ -1,13 +1,19 @@
 int x=1;
+int y = 3;
 
 switch(x){
-    case 1:
-    int x;
+    case x:
+    int w=0;
     break;
-    case 2:
+    case y:
     break;
-    case 3:
+    case 4:
+    break;
+    case 4:
+    int z=3;
+    z++;
     break;
     default:
+    int u = 5;
     break;
 }

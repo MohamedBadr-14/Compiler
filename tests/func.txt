@@ -1,0 +1,15 @@
+int x = 2;
+int xee(int x , int z , bool y)
+{
+    x = 3;
+}
+
+int y = 2;
+
+bool zee(double z , int y){
+    y++;
+}
+
+double z=1.5;
+int m = xee(y,1,true);
+bool e = zee(z,m);

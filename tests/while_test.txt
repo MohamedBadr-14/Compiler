@@ -1,9 +1,9 @@
 int x = 10;
 while(x){
-    while(x)
+    while(x != 5)
     {
         x++;
-        while(x){
+        while(x <= 7){
         x++;
         }         
     }
