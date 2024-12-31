@@ -1,5 +1,6 @@
 #include "Node.h"
 #include "y.tab.h"
+#include <math.h>
 
 
 char * concatunate(char t , int number) {
@@ -16,7 +17,21 @@ char * concatunate(char t , int number) {
     strcpy(result + 1, numStr);      
     return result;
 }
+char * concatunateDouble(char t , double number) {
+    // number =  round(number * 10) / 10;
+    char numStr[32];
+    sprintf(numStr, "%.1f", number);
 
+    char *result = (char *)malloc(strlen(numStr)+2); 
+    if (result == NULL) {
+        printf("Memory allocation failed!\n");
+        return NULL; 
+    }
+
+    // result[0] = t;            
+    strcpy(result , numStr);      
+    return result;
+}
 Node* createIntNode(int value , int scope , int new_count , bool flag ) {
     Node* node = (Node*)malloc(sizeof(Node));
 
@@ -48,7 +63,7 @@ Node* createIDNode(char* name , int scope,enum DataType type ) {
 Node* createDoubleNode(double value , int scope , int new_count , bool flag) {
     Node* node = (Node*)malloc(sizeof(Node));
 
-    node->name = flag ? concatunate(' ' , value) : concatunate('t',new_count);
+    node->name = flag ? concatunateDouble(' ' , value) : concatunate('t',new_count);
     node->value.dVal = value;
     node->scope = scope;
     node->dataType = TYPE_DOUBLE;
