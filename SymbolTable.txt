@@ -1,9 +1,8 @@
 Table: global
-Name: x, Type: double, Value: 5.0, type: 1 , isIntialized: true
+Name: x, Type: int, Value: 0, type: 1 , isIntialized: true
+Table: local
+Name: i, Type: int, Value: 0, type: 1 , isIntialized: true
 Table: local
 Table: local
-Table: local
-Table: local
-Name: y, Type: int, Value: 0, type: 1 , isIntialized: true
-Table: local
+Name: j, Type: int, Value: 0, type: 1 , isIntialized: true
 Table: local

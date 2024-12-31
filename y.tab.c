@@ -82,8 +82,12 @@
 
 
 extern int yylineno;
+const char* filename;
+int first_sem_err = 1;
+int first_syn_err = 1;
+
 int yylex(void);
-int yyerror(char *s);
+void yyerror(char *s);
 //read from text file
 extern FILE *yyin;
 //symbol table
@@ -106,6 +110,22 @@ void initialize() {
         initializeStack(&switchStack);
         params = (Node **)malloc(0);
 }
+
+void logError(const char *message, int line_num) {
+        FILE *errorFile;
+        if (first_sem_err) {
+                errorFile = fopen("semantic_errors.txt", "w");
+                fprintf(errorFile, "%s: Error at line %d: %s\n", filename, line_num, message);
+                first_sem_err = 0;
+        } else {
+                errorFile = fopen("semantic_errors.txt", "a");
+                fprintf(errorFile, "%s: Error at line %d: %s\n", filename, line_num, message);
+        }
+        fclose(errorFile);
+        fprintf(stderr, "%s: Error at line %d: %s\n", filename, line_num, message);
+        //     exit(-1);
+}
+
 //FUNCTIONS
 Node * handleConditionalExpression(Node * node);
 Node * handleConditionalComparison(Node * first , Node * second , char* operand);
@@ -134,7 +154,7 @@ char* funcName;
 
 
 /* Line 189 of yacc.c  */
-#line 138 "y.tab.c"
+#line 158 "y.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -277,7 +297,7 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 65 "parser.y"
+#line 85 "parser.y"
 
     Node* node;
     int ival;    // Integer values
@@ -292,7 +312,7 @@ typedef union YYSTYPE
 
 
 /* Line 214 of yacc.c  */
-#line 296 "y.tab.c"
+#line 316 "y.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -304,7 +324,7 @@ typedef union YYSTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 308 "y.tab.c"
+#line 328 "y.tab.c"
 
 #ifdef short
 # undef short
@@ -519,7 +539,7 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  3
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   377
+#define YYLAST   356
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  55
@@ -611,7 +631,7 @@ static const yytype_int8 yyrhs[] =
       -1,    15,    36,    79,    37,    -1,    95,    -1,    44,    -1,
       82,    59,    43,    36,    81,    37,    16,    -1,    43,    36,
       85,    37,    59,    -1,    95,    -1,    -1,    42,    36,    61,
-      99,    87,    88,    16,    89,    37,    62,    59,    -1,    97,
+      99,    87,    88,    16,    89,    37,    59,    62,    -1,    97,
       -1,   106,    -1,   104,    -1,    -1,    40,    36,    91,    94,
       37,    59,    -1,    90,    -1,    -1,    90,    41,    93,    59,
       -1,    95,    -1,    97,    -1,    97,    47,    95,    -1,    97,
@@ -635,18 +655,18 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   119,   119,   121,   129,   130,   134,   135,   139,   142,
-     150,   161,   162,   163,   164,   165,   166,   167,   168,   169,
-     174,   177,   174,   193,   198,   206,   206,   217,   218,   219,
-     219,   224,   224,   231,   243,   249,   249,   273,   273,   294,
-     303,   314,   319,   326,   347,   370,   377,   385,   388,   398,
-     408,   408,   423,   430,   431,   434,   434,   437,   443,   443,
-     461,   469,   472,   479,   488,   504,   520,   536,   552,   568,
-     584,   585,   598,   615,   616,   625,   665,   666,   681,   727,
-     731,   732,   735,   740,   748,   753,   758,   771,   778,   802,
-     821,   847,   874,   900,   901,   906,   909,   912,   915,   918,
-     921,   927,   939,   952,   964,   980,   983,   986,   989,   992,
-     998
+       0,   139,   139,   141,   149,   150,   154,   155,   159,   162,
+     170,   181,   182,   183,   184,   185,   186,   187,   188,   189,
+     194,   197,   194,   213,   218,   226,   226,   237,   238,   239,
+     239,   244,   244,   251,   263,   269,   269,   290,   290,   309,
+     318,   329,   334,   341,   358,   377,   384,   392,   395,   405,
+     415,   415,   430,   437,   438,   441,   441,   444,   450,   450,
+     468,   476,   479,   486,   495,   507,   519,   531,   543,   555,
+     567,   568,   581,   594,   595,   604,   640,   641,   654,   696,
+     700,   701,   704,   709,   717,   722,   727,   738,   745,   765,
+     782,   803,   825,   848,   849,   854,   857,   860,   863,   866,
+     869,   875,   888,   902,   915,   932,   935,   938,   941,   944,
+     950
 };
 #endif
 
@@ -749,8 +769,8 @@ static const yytype_uint8 yydefact[] =
        0,    70,    48,    62,    63,    64,    65,    66,    67,    68,
       69,     0,     0,    38,     0,    45,    78,    75,    56,     0,
       52,     9,    40,     0,     0,     0,    47,     0,     0,    54,
-      53,     0,     0,    21,     0,    23,    10,    25,    29,     0,
-      24,     0,     0,     0,     0,     0,     0,    10,    28,     0,
+      53,     0,     0,    21,     0,    23,     0,    25,    29,     0,
+      24,     0,     0,    10,     0,     0,     0,    10,    28,     0,
       51,    26,     0,     0,    22,    27,     0,    32,    30
 };
 
@@ -767,41 +787,41 @@ static const yytype_int16 yydefgoto[] =
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -124
+#define YYPACT_NINF -120
 static const yytype_int16 yypact[] =
 {
-    -124,    11,   281,  -124,  -124,  -124,  -124,  -124,  -124,  -124,
-     309,    53,     2,     8,  -124,     0,     7,     9,  -124,    16,
-     281,  -124,  -124,  -124,  -124,    -3,    10,  -124,    49,   281,
-    -124,  -124,  -124,    35,  -124,  -124,  -124,    60,    62,    67,
-    -124,  -124,  -124,  -124,  -124,  -124,  -124,   148,   108,    69,
-    -124,  -124,   281,  -124,  -124,   101,   222,  -124,  -124,    53,
-    -124,  -124,    50,  -124,    -8,  -124,  -124,  -124,  -124,  -124,
-    -124,  -124,    56,   108,   108,  -124,   -17,  -124,  -124,  -124,
-     154,   154,    71,   264,   101,    34,  -124,    15,   101,    59,
-    -124,  -124,   -26,  -124,   342,  -124,   281,    80,    87,   281,
-      84,   281,  -124,   222,  -124,  -124,    98,   222,  -124,   108,
-     108,   108,   108,   222,  -124,    66,  -124,    78,  -124,   109,
-      90,   325,  -124,   281,   101,   101,   108,   108,   108,   108,
-     108,   108,   102,  -124,    53,  -124,  -124,   101,  -124,   122,
-    -124,  -124,  -124,  -124,  -124,  -124,   129,  -124,   281,   101,
-     135,  -124,  -124,  -124,  -124,   154,   154,   154,   154,   154,
-     154,   111,   141,  -124,   133,  -124,  -124,  -124,  -124,   155,
-    -124,  -124,  -124,   156,   107,   -37,  -124,   124,   138,  -124,
-    -124,   108,   126,   -37,   161,  -124,  -124,   154,   140,   157,
-    -124,   178,   204,   281,   144,   281,   145,  -124,  -124,   182,
-    -124,  -124,   221,   186,  -124,  -124,   198,  -124,  -124
+    -120,    11,   311,  -120,  -120,  -120,  -120,  -120,  -120,  -120,
+     126,   214,     8,    19,  -120,     7,     9,    13,  -120,    16,
+     311,  -120,  -120,  -120,  -120,   -24,    10,  -120,    49,   311,
+    -120,  -120,  -120,    34,  -120,  -120,  -120,    68,    76,    77,
+    -120,  -120,  -120,  -120,  -120,  -120,  -120,    97,   116,    69,
+    -120,  -120,   311,  -120,  -120,    27,   105,  -120,  -120,   214,
+    -120,  -120,    53,  -120,    -8,  -120,  -120,  -120,  -120,  -120,
+    -120,  -120,    62,   116,   116,  -120,   -17,  -120,  -120,  -120,
+     131,   131,    73,   268,    27,   234,  -120,    15,    27,    65,
+    -120,  -120,   -26,  -120,   299,  -120,   311,    83,    90,   311,
+      75,   311,  -120,   105,  -120,  -120,    24,   105,  -120,   116,
+     116,   116,   116,   105,  -120,    87,  -120,   174,  -120,    98,
+      95,   154,  -120,   311,    27,    27,   116,   116,   116,   116,
+     116,   116,   100,  -120,   214,  -120,  -120,    27,  -120,   119,
+    -120,  -120,  -120,  -120,  -120,  -120,   123,  -120,   311,    27,
+     115,  -120,  -120,  -120,  -120,   131,   131,   131,   131,   131,
+     131,   112,   128,  -120,   114,  -120,  -120,  -120,  -120,   142,
+    -120,  -120,  -120,   145,   104,   -37,  -120,   141,   137,  -120,
+    -120,   116,   130,   -37,   191,  -120,   311,   131,   133,   153,
+    -120,   212,   208,  -120,   156,   311,   172,  -120,  -120,   216,
+    -120,  -120,   251,   228,  -120,  -120,   229,  -120,  -120
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int16 yypgoto[] =
 {
-    -124,  -124,  -124,   -48,   -19,  -124,   -23,  -123,  -124,  -124,
-    -124,  -124,  -124,  -124,  -124,    32,  -124,  -124,  -124,  -124,
-    -124,  -124,  -124,  -124,  -124,    -2,  -124,  -124,  -124,  -124,
-    -124,  -124,  -124,  -124,  -124,  -124,  -124,  -124,  -124,  -124,
-     -70,   130,   -76,  -124,   131,   -12,  -124,   -41,    -6,    44,
-    -124,    46
+    -120,  -120,  -120,   -48,   -19,  -120,   -23,  -119,  -120,  -120,
+    -120,  -120,  -120,  -120,  -120,    47,  -120,  -120,  -120,  -120,
+    -120,  -120,  -120,  -120,  -120,    -2,  -120,  -120,  -120,  -120,
+    -120,  -120,  -120,  -120,  -120,  -120,  -120,  -120,  -120,  -120,
+     -70,   160,   -76,  -120,   176,   -12,  -120,   -41,    -6,    88,
+    -120,    89
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -812,85 +832,81 @@ static const yytype_int16 yypgoto[] =
 static const yytype_int16 yytable[] =
 {
       28,    57,    59,   107,    83,    49,    80,    81,   102,   181,
-      62,     3,   122,   163,   116,    80,   182,    50,    28,   103,
-     108,   124,   125,    51,    67,    68,    69,    28,   104,    86,
-      72,    85,   105,   106,    58,    78,    53,     4,     5,     6,
-       7,     8,     9,    54,    95,    55,   121,    60,    73,   117,
-      28,    87,    56,    98,   153,   154,     4,     5,     6,     7,
-       8,     9,    80,   193,    57,    61,    80,   165,   142,   143,
-     144,   145,    80,   170,   204,    64,    63,   133,    65,   119,
-     136,    28,   138,    66,    82,   155,   156,   157,   158,   159,
-     160,   139,    47,   100,    28,   141,   123,    28,   113,    28,
-     134,   146,   135,   148,   152,    42,    43,    44,    45,    46,
-      67,    68,    69,    70,    71,    86,    72,    67,    68,    69,
-     137,    28,   177,    72,   150,    12,    13,   151,   162,   168,
-     109,   110,   111,   112,    73,   140,   192,    87,   166,   161,
-     187,    73,    40,    41,    74,   167,    28,   202,   175,   171,
-      88,    42,    43,    44,    45,    46,   172,    67,    68,    69,
-      70,    71,   103,    72,     4,     5,     6,     7,     8,     9,
-     173,   174,   176,    57,   200,   186,    10,   188,    11,    12,
-      13,    73,    28,    57,    74,    75,   109,   110,   111,   112,
-      28,    28,   -31,    28,   198,   201,   197,   203,   205,    14,
-      28,    15,   207,    16,    17,    18,    19,     4,     5,     6,
-       7,     8,     9,   191,   208,   190,   118,   120,   179,    10,
-     180,    11,    12,    13,     4,     5,     6,     7,     8,     9,
-       0,    67,    68,    69,    70,    71,    10,    72,    11,    12,
-      13,     0,    14,     0,    15,     0,    16,    17,    18,    19,
-       0,     0,     0,     0,     0,    73,   199,     0,    74,    14,
-       0,    15,     0,    16,    17,    18,    19,     4,     5,     6,
-       7,     8,     9,   206,     0,     0,     0,     0,     0,    10,
-       0,    11,    12,    13,     4,     5,     6,     7,     8,     9,
-       0,     0,     0,     0,     0,     0,    10,     0,    11,    12,
-      13,     0,    14,   114,    15,     0,    16,    17,    18,    19,
+      62,     3,   122,    58,   116,    80,   182,   163,    28,   103,
+     108,   124,   125,    50,    67,    68,    69,    28,   104,    86,
+      72,    85,   105,   106,    51,    78,    67,    68,    69,    70,
+      71,    86,    72,    53,    95,    54,   121,    60,    73,    55,
+      28,    87,    56,    98,   153,   154,   109,   110,   111,   112,
+      73,   140,    80,    87,    57,    61,    80,   165,   142,   143,
+     144,   145,    80,   170,   200,    63,    88,   133,   204,   119,
+     136,    28,   138,    64,    82,   155,   156,   157,   158,   159,
+     160,   139,    65,    66,    28,   141,   100,    28,    47,    28,
+     113,   146,   123,   134,   152,   135,    67,    68,    69,    70,
+      71,   137,    72,   150,    67,    68,    69,    70,    71,   177,
+      72,    28,    12,    13,   148,    67,    68,    69,   162,   168,
+      73,    72,   151,    74,    75,   166,   192,   161,    73,   167,
+     187,    74,   103,   172,    40,    41,    28,   202,   175,    73,
+     171,   173,    74,    42,    43,    44,    45,    46,   174,    40,
+      41,   176,    47,   109,   110,   111,   112,   193,    42,    43,
+      44,    45,    46,    57,   186,   126,   127,   128,   129,   130,
+     131,   188,    28,    57,    28,   -31,   109,   110,   111,   112,
+      28,   140,   197,    28,     4,     5,     6,     7,     8,     9,
+      28,    42,    43,    44,    45,    46,    10,   201,    11,    12,
+      13,     4,     5,     6,     7,     8,     9,     4,     5,     6,
+       7,     8,     9,    10,   203,    11,    12,    13,   198,    14,
+     190,    15,   205,    16,    17,    18,    19,     4,     5,     6,
+       7,     8,     9,   191,   207,   208,    14,   120,    15,   117,
+      16,    17,    18,    19,     4,     5,     6,     7,     8,     9,
+     199,   118,   179,   180,     0,     0,    10,     0,    11,    12,
+      13,     4,     5,     6,     7,     8,     9,     0,     0,     0,
+       0,     0,     0,    10,     0,    11,    12,    13,     0,    14,
+       0,    15,     0,    16,    17,    18,    19,     0,     0,     0,
+       0,     0,     0,   206,     0,     0,    14,   114,    15,     0,
+      16,    17,    18,    19,     4,     5,     6,     7,     8,     9,
+     126,   127,   128,   129,   130,   131,    10,     0,    11,    12,
+      13,   109,   110,   111,   112,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,    14,
-       0,    15,     0,    16,    17,    18,    19,    40,    41,     0,
-       0,     0,     0,     0,     0,     0,    42,    43,    44,    45,
-      46,     0,     0,     0,     0,    47,   126,   127,   128,   129,
-     130,   131,     0,     0,     0,     0,     0,   109,   110,   111,
-     112,     0,   140,   126,   127,   128,   129,   130,   131,     0,
-       0,     0,     0,     0,   109,   110,   111,   112
+       0,    15,     0,    16,    17,    18,    19
 };
 
 static const yytype_int16 yycheck[] =
 {
        2,    20,    25,    20,    52,    11,    47,    48,    16,    46,
-      29,     0,    88,   136,    84,    56,    53,    15,    20,    27,
+      29,     0,    88,    37,    84,    56,    53,   136,    20,    27,
       37,    47,    48,    15,     9,    10,    11,    29,    36,    14,
-      15,    54,    73,    74,    37,    47,    36,     3,     4,     5,
-       6,     7,     8,    36,    56,    36,    87,    37,    33,    15,
-      52,    36,    36,    59,   124,   125,     3,     4,     5,     6,
-       7,     8,   103,   186,    83,    16,   107,   137,   109,   110,
-     111,   112,   113,   149,   197,    15,    41,    96,    16,    85,
-      99,    83,   101,    16,    15,   126,   127,   128,   129,   130,
-     131,   103,    36,    43,    96,   107,    37,    99,    27,   101,
-      20,   113,    15,    37,   123,    27,    28,    29,    30,    31,
-       9,    10,    11,    12,    13,    14,    15,     9,    10,    11,
-      36,   123,    15,    15,    15,    18,    19,    37,   134,   148,
-      32,    33,    34,    35,    33,    37,   184,    36,    16,    37,
-     181,    33,    18,    19,    36,    16,   148,   195,   171,    38,
-      49,    27,    28,    29,    30,    31,    15,     9,    10,    11,
-      12,    13,    27,    15,     3,     4,     5,     6,     7,     8,
-      37,    16,    16,   192,   193,    37,    15,    51,    17,    18,
-      19,    33,   184,   202,    36,    37,    32,    33,    34,    35,
-     192,   193,    52,   195,    16,    51,    39,    52,    16,    38,
-     202,    40,    16,    42,    43,    44,    45,     3,     4,     5,
-       6,     7,     8,    52,    16,   183,    85,    87,   174,    15,
-     174,    17,    18,    19,     3,     4,     5,     6,     7,     8,
-      -1,     9,    10,    11,    12,    13,    15,    15,    17,    18,
-      19,    -1,    38,    -1,    40,    -1,    42,    43,    44,    45,
-      -1,    -1,    -1,    -1,    -1,    33,    52,    -1,    36,    38,
-      -1,    40,    -1,    42,    43,    44,    45,     3,     4,     5,
-       6,     7,     8,    52,    -1,    -1,    -1,    -1,    -1,    15,
-      -1,    17,    18,    19,     3,     4,     5,     6,     7,     8,
-      -1,    -1,    -1,    -1,    -1,    -1,    15,    -1,    17,    18,
-      19,    -1,    38,    39,    40,    -1,    42,    43,    44,    45,
+      15,    54,    73,    74,    15,    47,     9,    10,    11,    12,
+      13,    14,    15,    36,    56,    36,    87,    37,    33,    36,
+      52,    36,    36,    59,   124,   125,    32,    33,    34,    35,
+      33,    37,   103,    36,    83,    16,   107,   137,   109,   110,
+     111,   112,   113,   149,   193,    41,    49,    96,   197,    85,
+      99,    83,   101,    15,    15,   126,   127,   128,   129,   130,
+     131,   103,    16,    16,    96,   107,    43,    99,    36,   101,
+      27,   113,    37,    20,   123,    15,     9,    10,    11,    12,
+      13,    36,    15,    15,     9,    10,    11,    12,    13,    15,
+      15,   123,    18,    19,    37,     9,    10,    11,   134,   148,
+      33,    15,    37,    36,    37,    16,   184,    37,    33,    16,
+     181,    36,    27,    15,    18,    19,   148,   195,   171,    33,
+      38,    37,    36,    27,    28,    29,    30,    31,    16,    18,
+      19,    16,    36,    32,    33,    34,    35,   186,    27,    28,
+      29,    30,    31,   192,    37,    21,    22,    23,    24,    25,
+      26,    51,   184,   202,   186,    52,    32,    33,    34,    35,
+     192,    37,    39,   195,     3,     4,     5,     6,     7,     8,
+     202,    27,    28,    29,    30,    31,    15,    51,    17,    18,
+      19,     3,     4,     5,     6,     7,     8,     3,     4,     5,
+       6,     7,     8,    15,    52,    17,    18,    19,    16,    38,
+     183,    40,    16,    42,    43,    44,    45,     3,     4,     5,
+       6,     7,     8,    52,    16,    16,    38,    87,    40,    15,
+      42,    43,    44,    45,     3,     4,     5,     6,     7,     8,
+      52,    85,   174,   174,    -1,    -1,    15,    -1,    17,    18,
+      19,     3,     4,     5,     6,     7,     8,    -1,    -1,    -1,
+      -1,    -1,    -1,    15,    -1,    17,    18,    19,    -1,    38,
+      -1,    40,    -1,    42,    43,    44,    45,    -1,    -1,    -1,
+      -1,    -1,    -1,    52,    -1,    -1,    38,    39,    40,    -1,
+      42,    43,    44,    45,     3,     4,     5,     6,     7,     8,
+      21,    22,    23,    24,    25,    26,    15,    -1,    17,    18,
+      19,    32,    33,    34,    35,    -1,    -1,    -1,    -1,    -1,
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    38,
-      -1,    40,    -1,    42,    43,    44,    45,    18,    19,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    27,    28,    29,    30,
-      31,    -1,    -1,    -1,    -1,    36,    21,    22,    23,    24,
-      25,    26,    -1,    -1,    -1,    -1,    -1,    32,    33,    34,
-      35,    -1,    37,    21,    22,    23,    24,    25,    26,    -1,
-      -1,    -1,    -1,    -1,    32,    33,    34,    35
+      -1,    40,    -1,    42,    43,    44,    45
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
@@ -916,8 +932,8 @@ static const yytype_uint8 yystos[] =
      102,    37,   103,    62,    81,    95,    16,    16,    59,    88,
       97,    38,    15,    37,    16,    61,    16,    15,    89,   104,
      106,    46,    53,    67,    68,    70,    37,   102,    51,    66,
-      70,    52,    58,    62,    69,    71,    72,    39,    16,    52,
-      59,    51,    58,    52,    62,    16,    52,    16,    16
+      70,    52,    58,    59,    69,    71,    72,    39,    16,    52,
+      62,    51,    58,    52,    62,    16,    52,    16,    16
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1731,7 +1747,7 @@ yyreduce:
         case 3:
 
 /* Line 1455 of yacc.c  */
-#line 121 "parser.y"
+#line 141 "parser.y"
     {
         printf("Start\n");
                globalTable = createSymbolTable("global",scope, NULL);
@@ -1743,7 +1759,7 @@ yyreduce:
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 142 "parser.y"
+#line 162 "parser.y"
     {printf("Start Scope\n");
         scope++;
         tempTable = createSymbolTable("local",scope, currTable);
@@ -1755,7 +1771,7 @@ yyreduce:
   case 10:
 
 /* Line 1455 of yacc.c  */
-#line 150 "parser.y"
+#line 170 "parser.y"
     {printf("End Scope\n");
         scope--;
         currTable = currTable->parent;
@@ -1765,70 +1781,70 @@ yyreduce:
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 161 "parser.y"
+#line 181 "parser.y"
     {printf("defualt Declaration\n");}
     break;
 
   case 12:
 
 /* Line 1455 of yacc.c  */
-#line 162 "parser.y"
+#line 182 "parser.y"
     {printf("func_statment \n");}
     break;
 
   case 13:
 
 /* Line 1455 of yacc.c  */
-#line 163 "parser.y"
+#line 183 "parser.y"
     {printf("special Declaration\n");}
     break;
 
   case 14:
 
 /* Line 1455 of yacc.c  */
-#line 164 "parser.y"
+#line 184 "parser.y"
     {printf("Conditional Statement\n");}
     break;
 
   case 15:
 
 /* Line 1455 of yacc.c  */
-#line 165 "parser.y"
+#line 185 "parser.y"
     {printf("For Statement\n");}
     break;
 
   case 16:
 
 /* Line 1455 of yacc.c  */
-#line 166 "parser.y"
+#line 186 "parser.y"
     {printf("While Statement\n");}
     break;
 
   case 17:
 
 /* Line 1455 of yacc.c  */
-#line 167 "parser.y"
+#line 187 "parser.y"
     {printf("Do While Statement\n");}
     break;
 
   case 18:
 
 /* Line 1455 of yacc.c  */
-#line 168 "parser.y"
+#line 188 "parser.y"
     {printf("Function Call with semi colonnnn\n");}
     break;
 
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 169 "parser.y"
+#line 189 "parser.y"
     {printf("Switch Statement\n");}
     break;
 
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 174 "parser.y"
+#line 194 "parser.y"
     {
                 switchCount++;
                 push(&switchStack , switchCount);
@@ -1838,7 +1854,7 @@ yyreduce:
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 177 "parser.y"
+#line 197 "parser.y"
     {
                 if(!isDefault)
                 {
@@ -1852,7 +1868,7 @@ yyreduce:
   case 22:
 
 /* Line 1455 of yacc.c  */
-#line 184 "parser.y"
+#line 204 "parser.y"
     { 
                 int popped_switch = pop(&switchStack);
                 char*label= concatunate('S' , popped_switch);
@@ -1865,7 +1881,7 @@ yyreduce:
   case 23:
 
 /* Line 1455 of yacc.c  */
-#line 193 "parser.y"
+#line 213 "parser.y"
     {
                 int popped_switch = peek(&switchStack);
                 char*label= concatunate('S' , popped_switch);
@@ -1876,7 +1892,7 @@ yyreduce:
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 199 "parser.y"
+#line 219 "parser.y"
     {
                 int popped_switch = peek(&switchStack);
                 char*label= concatunate('S' , popped_switch);
@@ -1887,7 +1903,7 @@ yyreduce:
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 206 "parser.y"
+#line 226 "parser.y"
     {
                 char*label_1= concatunate('C' , caseCount);
                 insertQuad(NULL , NULL , "LABEL" , label_1 , 0);
@@ -1903,7 +1919,7 @@ yyreduce:
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 219 "parser.y"
+#line 239 "parser.y"
     {
                 isDefault = true;
                 char*label_1= concatunate('C' , caseCount);
@@ -1914,7 +1930,7 @@ yyreduce:
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 224 "parser.y"
+#line 244 "parser.y"
     {
                 isDefault = true;
                 char*label_1= concatunate('C' , caseCount);
@@ -1925,7 +1941,7 @@ yyreduce:
   case 33:
 
 /* Line 1455 of yacc.c  */
-#line 231 "parser.y"
+#line 251 "parser.y"
     {
                
                 printf("Data func Identifier\n");
@@ -1941,14 +1957,14 @@ yyreduce:
   case 34:
 
 /* Line 1455 of yacc.c  */
-#line 243 "parser.y"
+#line 263 "parser.y"
     { (yyval.node) = (yyvsp[(1) - (3)].node); }
     break;
 
   case 35:
 
 /* Line 1455 of yacc.c  */
-#line 249 "parser.y"
+#line 269 "parser.y"
     {
                 SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(1) - (2)].node)->name);
                 if(entry != NULL && entry->kind == func){
@@ -1956,20 +1972,17 @@ yyreduce:
                                 char* start = concatenateStrings( (yyvsp[(1) - (2)].node)->name, "_START");
                                 insertQuad(NULL , NULL , "LABEL" , start , 0);
                         }
-                        else{
-                                printf("Error: Function is with parameters\n");
-                        }
+                        else logError("Function is with parameters.", yylineno);
                 }
-                else{
-                        printf("Error: Function not declared\n");
-                }
+                else logError("Function is not declared.", yylineno);
+
         }
     break;
 
   case 36:
 
 /* Line 1455 of yacc.c  */
-#line 263 "parser.y"
+#line 280 "parser.y"
     {
                 SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(1) - (4)].node)->name);
                 if(entry != NULL && entry->kind == func){
@@ -1984,16 +1997,14 @@ yyreduce:
   case 37:
 
 /* Line 1455 of yacc.c  */
-#line 273 "parser.y"
+#line 290 "parser.y"
     {
                 SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(1) - (2)].node)->name);
                 if(entry != NULL && entry->kind == func){
                                 char* start = concatenateStrings( (yyvsp[(1) - (2)].node)->name, "_START");
                                 insertQuad(NULL , NULL , "LABEL" , start , 0);
                 }
-                else{
-                        printf("Error: Function not declared\n");
-                }
+                else logError("Function is not declared.", yylineno);
         
         }
     break;
@@ -2001,7 +2012,7 @@ yyreduce:
   case 38:
 
 /* Line 1455 of yacc.c  */
-#line 283 "parser.y"
+#line 298 "parser.y"
     {
                 SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(1) - (5)].node)->name);
                 if(entry != NULL && entry->kind == func){
@@ -2015,7 +2026,7 @@ yyreduce:
   case 39:
 
 /* Line 1455 of yacc.c  */
-#line 294 "parser.y"
+#line 309 "parser.y"
     {         printf("Data Type Identifier\n");
                 union Value val;
                 SymbolEntry* entry= createSymbolEntryWithDefaults((yyvsp[(2) - (2)].sval), param,val,false,0,(yyvsp[(1) - (2)].dataType)); 
@@ -2030,7 +2041,7 @@ yyreduce:
   case 40:
 
 /* Line 1455 of yacc.c  */
-#line 303 "parser.y"
+#line 318 "parser.y"
     {         printf("Data Type Identifier\n");
                 union Value val;
                 SymbolEntry* entry= createSymbolEntryWithDefaults((yyvsp[(4) - (4)].sval), param,val,false,0,(yyvsp[(3) - (4)].dataType)); 
@@ -2045,7 +2056,7 @@ yyreduce:
   case 41:
 
 /* Line 1455 of yacc.c  */
-#line 314 "parser.y"
+#line 329 "parser.y"
     {
                 params = (Node **)realloc(params, (paramCount + 1) * sizeof(Node*));
                 params[paramCount] = (yyvsp[(1) - (1)].node);
@@ -2056,7 +2067,7 @@ yyreduce:
   case 42:
 
 /* Line 1455 of yacc.c  */
-#line 319 "parser.y"
+#line 334 "parser.y"
     {
                 params = (Node **)realloc(params, (paramCount + 1) * sizeof(Node*));
                 params[paramCount] = (yyvsp[(3) - (3)].node);
@@ -2067,7 +2078,7 @@ yyreduce:
   case 43:
 
 /* Line 1455 of yacc.c  */
-#line 326 "parser.y"
+#line 341 "parser.y"
     {
                 SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(1) - (3)].sval));
                 if(entry != NULL && entry->kind == func){
@@ -2081,20 +2092,16 @@ yyreduce:
                                 (yyval.node) = node;
 
                         }
-                        else{
-                                printf("Error: Function is with parameters\n");
-                        }
+                        else logError("Function is with parameters.", yylineno);
                 }
-                else{
-                        printf("Error: Function not declared\n");
-                }
+                else logError("Function is not declared.", yylineno);
         }
     break;
 
   case 44:
 
 /* Line 1455 of yacc.c  */
-#line 347 "parser.y"
+#line 358 "parser.y"
     {
                 SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(1) - (4)].sval));
                 if(entry != NULL && entry->kind == func){
@@ -2109,20 +2116,16 @@ yyreduce:
                                 paramCount = 0;
                                 (yyval.node) = node;
                         }
-                        else{
-                                printf("Error: Function is with parameters %d\n" , entry->argCount);
-                        }
+                        else logError("Function is with parameters.", yylineno);
                 }
-                else{
-                        printf("Error: Function not declared\n");
-                }
+                else logError("Function is not declared.", yylineno);
         }
     break;
 
   case 45:
 
 /* Line 1455 of yacc.c  */
-#line 370 "parser.y"
+#line 377 "parser.y"
     {
         int popped_do_while = pop(&do_whileStack);
         char*label= concatunate('D' , popped_do_while);
@@ -2134,7 +2137,7 @@ yyreduce:
   case 46:
 
 /* Line 1455 of yacc.c  */
-#line 377 "parser.y"
+#line 384 "parser.y"
     {
                 do_while_labels++;
                 insertQuad(NULL , NULL , "LABEL" , concatunate('D' , do_while_labels ) , 0);
@@ -2145,14 +2148,14 @@ yyreduce:
   case 47:
 
 /* Line 1455 of yacc.c  */
-#line 385 "parser.y"
+#line 392 "parser.y"
     {printf("Do While Statement\n");}
     break;
 
   case 48:
 
 /* Line 1455 of yacc.c  */
-#line 388 "parser.y"
+#line 395 "parser.y"
     { 
                 int popped_while_1 = pop(&whileStack);
                 int popped_while_2 = pop(&whileStack);
@@ -2167,7 +2170,7 @@ yyreduce:
   case 49:
 
 /* Line 1455 of yacc.c  */
-#line 398 "parser.y"
+#line 405 "parser.y"
     {
         while_labels++;
         insertQuad(NULL , NULL , "LABEL" , concatunate('W' , while_labels ) , 0);
@@ -2182,7 +2185,7 @@ yyreduce:
   case 50:
 
 /* Line 1455 of yacc.c  */
-#line 408 "parser.y"
+#line 415 "parser.y"
     {
                 for_labels++;
                 insertQuad(NULL , NULL , "LABEL" , concatunate('F' , for_labels ) , 0);
@@ -2193,7 +2196,7 @@ yyreduce:
   case 51:
 
 /* Line 1455 of yacc.c  */
-#line 413 "parser.y"
+#line 420 "parser.y"
     {
                 int popped_for_2 = pop(&forStack);
                 int popped_for_1 = pop(&forStack);
@@ -2207,7 +2210,7 @@ yyreduce:
   case 52:
 
 /* Line 1455 of yacc.c  */
-#line 423 "parser.y"
+#line 430 "parser.y"
     {
                 for_labels++;
                 insertQuad((yyvsp[(1) - (1)].node)->name , NULL , "JZ" , concatunate('F' , for_labels ) , 0);
@@ -2219,14 +2222,14 @@ yyreduce:
   case 55:
 
 /* Line 1455 of yacc.c  */
-#line 434 "parser.y"
+#line 441 "parser.y"
     {labels++;}
     break;
 
   case 57:
 
 /* Line 1455 of yacc.c  */
-#line 437 "parser.y"
+#line 444 "parser.y"
     {
                 popped = pop(&ifStack);
                 char*label= concatunate('L' , popped);
@@ -2238,7 +2241,7 @@ yyreduce:
   case 58:
 
 /* Line 1455 of yacc.c  */
-#line 443 "parser.y"
+#line 450 "parser.y"
     {
                 isElse = true;
                 printf("If Statement\n");
@@ -2256,7 +2259,7 @@ yyreduce:
   case 59:
 
 /* Line 1455 of yacc.c  */
-#line 454 "parser.y"
+#line 461 "parser.y"
     {
                         popped = pop(&ifStack);
                         char*label= concatunate('L' , popped);
@@ -2267,7 +2270,7 @@ yyreduce:
   case 60:
 
 /* Line 1455 of yacc.c  */
-#line 461 "parser.y"
+#line 468 "parser.y"
     { 
         insertQuad((yyvsp[(1) - (1)].node)->name , NULL , "JZ" , concatunate('L' , labels) , 0);
         push(&ifStack , labels);
@@ -2279,7 +2282,7 @@ yyreduce:
   case 61:
 
 /* Line 1455 of yacc.c  */
-#line 469 "parser.y"
+#line 476 "parser.y"
     {
                 printf("Conditional If: %s\n" , (yyvsp[(1) - (1)].node)->name);
                 (yyval.node) = (yyvsp[(1) - (1)].node);}
@@ -2288,7 +2291,7 @@ yyreduce:
   case 62:
 
 /* Line 1455 of yacc.c  */
-#line 472 "parser.y"
+#line 479 "parser.y"
     { 
                 tempCount++;
                 Node * boolNode = createBoolNode((yyvsp[(1) - (3)].node)->value.bVal && (yyvsp[(3) - (3)].node)->value.bVal , scope , tempCount , false);
@@ -2301,7 +2304,7 @@ yyreduce:
   case 63:
 
 /* Line 1455 of yacc.c  */
-#line 480 "parser.y"
+#line 487 "parser.y"
     {
                 tempCount++;
                 Node * boolNode = createBoolNode((yyvsp[(1) - (3)].node)->value.bVal || (yyvsp[(3) - (3)].node)->value.bVal , scope , tempCount , false);     
@@ -2313,7 +2316,7 @@ yyreduce:
   case 64:
 
 /* Line 1455 of yacc.c  */
-#line 488 "parser.y"
+#line 495 "parser.y"
     { 
                 if((yyvsp[(1) - (3)].node)->dataType == (yyvsp[(3) - (3)].node)->dataType){
                                 
@@ -2322,20 +2325,16 @@ yyreduce:
                                 printf("LESS THAN %d\n" , boolNode->value.bVal ? 1:0);
                                 (yyval.node) = boolNode;
                         }
-                        else{
-                                printf("Error: MOSHKELA\n");
-                        }
+                        else logError("", yylineno);
                 }
-                else{
-                        printf("Error: Data Type Mismatch\n");
-                }
+                else logError("Data type mismatch.", yylineno);
         }
     break;
 
   case 65:
 
 /* Line 1455 of yacc.c  */
-#line 504 "parser.y"
+#line 507 "parser.y"
     {
                 if((yyvsp[(1) - (3)].node)->dataType == (yyvsp[(3) - (3)].node)->dataType)
                 {
@@ -2344,20 +2343,16 @@ yyreduce:
                                 printf("Greater THAN %d\n" , boolNode->value.bVal ? 1:0);
                                 (yyval.node) = boolNode;
                         }
-                        else{
-                                printf("Error: MOSHKELA\n");
-                        }
+                        else logError("", yylineno);
                 }
-                else {
-                        printf("Error: Data Type Mismatch\n");
-                }
+                else logError("Data type mismatch.", yylineno);
         }
     break;
 
   case 66:
 
 /* Line 1455 of yacc.c  */
-#line 520 "parser.y"
+#line 519 "parser.y"
     {
                 if((yyvsp[(1) - (3)].node)->dataType == (yyvsp[(3) - (3)].node)->dataType)
                 {
@@ -2366,20 +2361,16 @@ yyreduce:
                                 printf("LESS THAN or equal %d\n" , boolNode->value.bVal ? 1:0);
                                 (yyval.node) = boolNode;
                         }
-                        else{
-                                printf("Error: MOSHKELA\n");
-                        }
+                        else logError("", yylineno);
                 }
-                else {
-                        printf("Error: Data Type Mismatch\n");
-                }
+                else logError("Data type mismatch.", yylineno);
         }
     break;
 
   case 67:
 
 /* Line 1455 of yacc.c  */
-#line 536 "parser.y"
+#line 531 "parser.y"
     {
                 if((yyvsp[(1) - (3)].node)->dataType == (yyvsp[(3) - (3)].node)->dataType)
                 {
@@ -2388,20 +2379,16 @@ yyreduce:
                                 printf("greater THAN equal %d\n" , boolNode->value.bVal ? 1:0);
                                 (yyval.node) = boolNode;
                         }
-                        else{
-                                printf("Error: MOSHKELA\n");
-                        }
+                        else logError("", yylineno);
                 }
-                else {
-                        printf("Error: Data Type Mismatch\n");
-                }
+                else logError("Data type mismatch.", yylineno);
         }
     break;
 
   case 68:
 
 /* Line 1455 of yacc.c  */
-#line 552 "parser.y"
+#line 543 "parser.y"
     {
                 if((yyvsp[(1) - (3)].node)->dataType == (yyvsp[(3) - (3)].node)->dataType)
                 {
@@ -2410,20 +2397,16 @@ yyreduce:
                                 printf("equal  %d\n" , boolNode->value.bVal ? 1:0);
                                 (yyval.node) = boolNode;
                         }
-                        else{
-                                printf("Error: MOSHKELA\n");
-                        }
+                        else logError("", yylineno);
                 }
-                else {
-                        printf("Error: Data Type Mismatch\n");
-                }
+                else logError("Data type mismatch.", yylineno);
         }
     break;
 
   case 69:
 
 /* Line 1455 of yacc.c  */
-#line 568 "parser.y"
+#line 555 "parser.y"
     {
                if((yyvsp[(1) - (3)].node)->dataType == (yyvsp[(3) - (3)].node)->dataType)
                { 
@@ -2432,27 +2415,23 @@ yyreduce:
                                 (yyval.node) = boolNode;
                                 printf("not equal %d\n" , boolNode->value.bVal ? 1:0);
                         }
-                        else{
-                                printf("Error: MOSHKELA\n");
-                        }
+                        else logError("", yylineno);
                 }
-                else {
-                        printf("Error: Data Type Mismatch\n");
-                }
+                else logError("Data type mismatch.", yylineno);
         }
     break;
 
   case 70:
 
 /* Line 1455 of yacc.c  */
-#line 584 "parser.y"
+#line 567 "parser.y"
     {(yyval.node) = (yyvsp[(2) - (3)].node);}
     break;
 
   case 71:
 
 /* Line 1455 of yacc.c  */
-#line 585 "parser.y"
+#line 568 "parser.y"
     {
                 Node* boolNode;
                 if ((yyvsp[(1) - (1)].bVal))
@@ -2468,7 +2447,7 @@ yyreduce:
   case 72:
 
 /* Line 1455 of yacc.c  */
-#line 598 "parser.y"
+#line 581 "parser.y"
     {
                 if((yyvsp[(1) - (1)].node)->nodeType == NODE_ID)
                 {
@@ -2478,27 +2457,23 @@ yyreduce:
                         printf("3azeemm %d\n" , boolNode->value.bVal ? 1:0);
                         (yyval.node) = boolNode;
                 }
-                else{
-                        printf("Error: MOSHKELA\n");
+                else logError("", yylineno);
                 }
-                }
-                else {
-                        printf("GHALATTTTTT\n");
-                }
+                else logError("", yylineno);
         }
     break;
 
   case 73:
 
 /* Line 1455 of yacc.c  */
-#line 615 "parser.y"
+#line 594 "parser.y"
     {(yyval.node)=(yyvsp[(1) - (1)].node);}
     break;
 
   case 74:
 
 /* Line 1455 of yacc.c  */
-#line 616 "parser.y"
+#line 595 "parser.y"
     {
                 tempCount++;
                 Node * boolNode = createBoolNode(!(yyvsp[(2) - (2)].node)->value.bVal , scope , tempCount , false);    
@@ -2510,7 +2485,7 @@ yyreduce:
   case 75:
 
 /* Line 1455 of yacc.c  */
-#line 625 "parser.y"
+#line 604 "parser.y"
     {
                 SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(3) - (6)].sval));
                 if(entry == NULL)
@@ -2542,13 +2517,9 @@ yyreduce:
                                         insertQuad((yyvsp[(5) - (6)].node)->name , NULL , "=" , (yyvsp[(3) - (6)].sval) , 0);
                                 }
                         }
-                        else{
-                                printf("Error: Data Type Mismatch\n");
-                        }
+                        else logError("Data type mismatch.", yylineno);
                 }
-                else {
-                        printf("Error: Varibale already declared\n");
-                }
+                else logError("Variable is already declared.", yylineno);
 
         }
     break;
@@ -2556,7 +2527,7 @@ yyreduce:
   case 77:
 
 /* Line 1455 of yacc.c  */
-#line 666 "parser.y"
+#line 641 "parser.y"
     {
                 printf("Data Type Identifier\n");
                 SymbolEntry * entry = getentryfromalltables(currTable, (yyvsp[(2) - (3)].sval));
@@ -2566,16 +2537,14 @@ yyreduce:
                         SymbolEntry* entry= createSymbolEntryWithDefaults((yyvsp[(2) - (3)].sval), var,val,false,0,(yyvsp[(1) - (3)].dataType)); 
                         addEntryToTable(currTable, entry);
                 }
-                else{
-                        printf("ERROR: VARIABLE ALREADY DECLARED\n");
-                }
+                else logError("Variable is already declared.", yylineno);
         }
     break;
 
   case 78:
 
 /* Line 1455 of yacc.c  */
-#line 681 "parser.y"
+#line 654 "parser.y"
     {  
                 printf(" Default Declaration Data Type: %d data type el tanyyy %d\n", (yyvsp[(1) - (5)].dataType) , (yyvsp[(4) - (5)].node)->dataType); 
                 SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(2) - (5)].sval));
@@ -2612,13 +2581,9 @@ yyreduce:
 
                     
                 }
-                else{
-                        printf("Error: Data Type Mismatch\n");
+                else logError("Data type mismatch.", yylineno);
                 }
-                }
-                else {
-                        printf("Error: Variable already declared\n");
-                }
+                else logError("Variable is already declared.", yylineno);
 
             
             }
@@ -2627,28 +2592,28 @@ yyreduce:
   case 79:
 
 /* Line 1455 of yacc.c  */
-#line 727 "parser.y"
+#line 696 "parser.y"
     {printf("Assign Expression\n");}
     break;
 
   case 80:
 
 /* Line 1455 of yacc.c  */
-#line 731 "parser.y"
+#line 700 "parser.y"
     {(yyval.node) = (yyvsp[(1) - (1)].node);}
     break;
 
   case 81:
 
 /* Line 1455 of yacc.c  */
-#line 732 "parser.y"
+#line 701 "parser.y"
     {(yyval.node) = (yyvsp[(1) - (1)].node);}
     break;
 
   case 82:
 
 /* Line 1455 of yacc.c  */
-#line 735 "parser.y"
+#line 704 "parser.y"
     { 
                                 Node *node= createCharNode((yyvsp[(1) - (1)].cval), scope , tempCount , true);
                                 (yyval.node) = node;
@@ -2659,7 +2624,7 @@ yyreduce:
   case 83:
 
 /* Line 1455 of yacc.c  */
-#line 740 "parser.y"
+#line 709 "parser.y"
     { 
                                 Node *node= createStringNode((yyvsp[(1) - (1)].sval), scope, tempCount , true);
                                 (yyval.node) = node;
@@ -2670,7 +2635,7 @@ yyreduce:
   case 84:
 
 /* Line 1455 of yacc.c  */
-#line 748 "parser.y"
+#line 717 "parser.y"
     {
                         Node *node= createIntNode((yyvsp[(1) - (1)].ival) , scope , tempCount , true);
                         (yyval.node) = node; 
@@ -2681,7 +2646,7 @@ yyreduce:
   case 85:
 
 /* Line 1455 of yacc.c  */
-#line 753 "parser.y"
+#line 722 "parser.y"
     {
                                 Node *node= createDoubleNode((yyvsp[(1) - (1)].dVal), scope , tempCount , true);
                                 (yyval.node) = node;
@@ -2692,7 +2657,7 @@ yyreduce:
   case 86:
 
 /* Line 1455 of yacc.c  */
-#line 758 "parser.y"
+#line 727 "parser.y"
     {
                 SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(1) - (1)].sval));
                 if(entry != NULL && entry->isInitialized){
@@ -2701,9 +2666,7 @@ yyreduce:
                         node->value = entry->value;
                         (yyval.node) = node;
                 }
-                else{
-                        printf("Error: Variable not declared or intializeddd\n");
-                }
+                else logError("Variable is undeclared or uninitialized.", yylineno);
                 
         }
     break;
@@ -2711,7 +2674,7 @@ yyreduce:
   case 87:
 
 /* Line 1455 of yacc.c  */
-#line 771 "parser.y"
+#line 738 "parser.y"
     {
                         Node *node= createBoolNode((yyvsp[(1) - (1)].bVal), scope , tempCount , true);
                         (yyval.node) = node;
@@ -2722,7 +2685,7 @@ yyreduce:
   case 88:
 
 /* Line 1455 of yacc.c  */
-#line 778 "parser.y"
+#line 745 "parser.y"
     {
         if ((yyvsp[(1) - (3)].node)->dataType == (yyvsp[(3) - (3)].node)->dataType){
                 if ((yyvsp[(1) - (3)].node)->dataType == TYPE_INT){
@@ -2737,13 +2700,9 @@ yyreduce:
                         insertQuad((yyvsp[(1) - (3)].node)->name , (yyvsp[(3) - (3)].node)->name , "+" , node->name , 0);
                         (yyval.node) = node;
                 }
-                else{
-                        printf("Error: ERROORR");
-                }
+                else logError("Only int and double values can use this operator.", yylineno);
         }
-        else{
-                printf("Error: Data Type Mismatch\n");
-        }
+        else logError("Data type mismatch.", yylineno);
 
      
         }
@@ -2752,7 +2711,7 @@ yyreduce:
   case 89:
 
 /* Line 1455 of yacc.c  */
-#line 802 "parser.y"
+#line 765 "parser.y"
     { 
                 if((yyvsp[(2) - (2)].node)->dataType == TYPE_INT)
                 {
@@ -2768,16 +2727,14 @@ yyreduce:
                         insertQuad(NULL , (yyvsp[(2) - (2)].node)->name , "-" , node->name , 0);
                         (yyval.node) = node;
                 }
-                else {
-                        printf("Error: ERROORR");
-                }
+                else logError("Only int and double values can use this operator.", yylineno);
         }
     break;
 
   case 90:
 
 /* Line 1455 of yacc.c  */
-#line 821 "parser.y"
+#line 782 "parser.y"
     { 
         if((yyvsp[(1) - (3)].node)->dataType == (yyvsp[(3) - (3)].node)->dataType)
         {
@@ -2795,21 +2752,16 @@ yyreduce:
                         insertQuad((yyvsp[(1) - (3)].node)->name , (yyvsp[(3) - (3)].node)->name , "-" , node->name , 0);
                         (yyval.node) = node;
                 }
-                else {
-                        printf("Error: ERROORR");
-                }
+                else logError("Only int and double values can use this operator.", yylineno);
         }
-        else
-        {
-                printf("Error: Data Type Mismatch\n");
-        }
+        else logError("Data type mismatch.", yylineno);
         }
     break;
 
   case 91:
 
 /* Line 1455 of yacc.c  */
-#line 847 "parser.y"
+#line 803 "parser.y"
     {     
         if((yyvsp[(1) - (3)].node)->dataType == (yyvsp[(3) - (3)].node)->dataType)
         {
@@ -2827,14 +2779,9 @@ yyreduce:
                         insertQuad((yyvsp[(1) - (3)].node)->name , (yyvsp[(3) - (3)].node)->name , "*" , node->name , 0);
                         (yyval.node) = node;
                 }
-                else {
-                        printf("Error: ERROORR");
-                }
+                else logError("Only int and double values can use this operator.", yylineno);
         }
-        else
-        {
-                printf("Error: Data Type Mismatch\n");
-        }
+        else logError("Data type mismatch.", yylineno);
 
         }
     break;
@@ -2842,53 +2789,50 @@ yyreduce:
   case 92:
 
 /* Line 1455 of yacc.c  */
-#line 874 "parser.y"
+#line 825 "parser.y"
     { 
         if((yyvsp[(1) - (3)].node)->dataType == (yyvsp[(3) - (3)].node)->dataType )
         {
-                if((yyvsp[(1) - (3)].node)->dataType == TYPE_INT && (yyvsp[(3) - (3)].node)->value.iVal != 0)
+                if((yyvsp[(1) - (3)].node)->dataType == TYPE_INT)
                 {
+                        if ((yyvsp[(3) - (3)].node)->value.iVal == 0) logError("Division by zero.", yylineno);
                         tempCount++;
                         Node *node= createIntNode((yyvsp[(1) - (3)].node)->value.iVal/ (yyvsp[(3) - (3)].node)->value.iVal, scope, tempCount , false);
                         insertQuad((yyvsp[(1) - (3)].node)->name , (yyvsp[(3) - (3)].node)->name , "/" , node->name , 0);
                         (yyval.node) = node;
                 }
-                else if((yyvsp[(1) - (3)].node)->dataType == TYPE_DOUBLE && (yyvsp[(3) - (3)].node)->value.dVal != 0)
+                else if((yyvsp[(1) - (3)].node)->dataType == TYPE_DOUBLE)
                 {
+                        if ((yyvsp[(3) - (3)].node)->value.dVal == 0) logError("Division by zero.", yylineno);
                         tempCount++;
                         Node *node= createDoubleNode((yyvsp[(1) - (3)].node)->value.dVal/ (yyvsp[(3) - (3)].node)->value.dVal, scope , tempCount , false);
                         insertQuad((yyvsp[(1) - (3)].node)->name , (yyvsp[(3) - (3)].node)->name , "/" , node->name , 0);
                         (yyval.node) = node;
                 }
-                else {
-                        printf("Error: ERROORR");
-                }
+                else logError("Only int and double values can use this operator.", yylineno);
         }
-        else
-        {
-                printf("Error: Data Type Mismatch\n");
-        }
+        else logError("Data type mismatch.", yylineno);
         }
     break;
 
   case 93:
 
 /* Line 1455 of yacc.c  */
-#line 900 "parser.y"
+#line 848 "parser.y"
     { (yyval.node) = (yyvsp[(2) - (3)].node); }
     break;
 
   case 94:
 
 /* Line 1455 of yacc.c  */
-#line 901 "parser.y"
+#line 849 "parser.y"
     {(yyval.node) = (yyvsp[(1) - (1)].node);}
     break;
 
   case 95:
 
 /* Line 1455 of yacc.c  */
-#line 906 "parser.y"
+#line 854 "parser.y"
     {printf("Int Type\n");
         (yyval.dataType) = TYPE_INT;
         }
@@ -2897,7 +2841,7 @@ yyreduce:
   case 96:
 
 /* Line 1455 of yacc.c  */
-#line 909 "parser.y"
+#line 857 "parser.y"
     {printf("Double Type\n");
         (yyval.dataType) = TYPE_DOUBLE;
         }
@@ -2906,7 +2850,7 @@ yyreduce:
   case 97:
 
 /* Line 1455 of yacc.c  */
-#line 912 "parser.y"
+#line 860 "parser.y"
     {printf("Bool Type \n");
         (yyval.dataType) = TYPE_BOOL;
         }
@@ -2915,7 +2859,7 @@ yyreduce:
   case 98:
 
 /* Line 1455 of yacc.c  */
-#line 915 "parser.y"
+#line 863 "parser.y"
     {printf("Char Type\n");
         (yyval.dataType) = TYPE_CHAR;
         }
@@ -2924,7 +2868,7 @@ yyreduce:
   case 99:
 
 /* Line 1455 of yacc.c  */
-#line 918 "parser.y"
+#line 866 "parser.y"
     {printf("String Type\n");
         (yyval.dataType) = TYPE_STRING;
         }
@@ -2933,7 +2877,7 @@ yyreduce:
   case 100:
 
 /* Line 1455 of yacc.c  */
-#line 921 "parser.y"
+#line 869 "parser.y"
     {printf("Void Type\n");
         (yyval.dataType) = TYPE_VOID;
         }
@@ -2942,17 +2886,18 @@ yyreduce:
   case 101:
 
 /* Line 1455 of yacc.c  */
-#line 927 "parser.y"
+#line 875 "parser.y"
     {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(1) - (2)].sval));
                 if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param) ){
+                        entry->used = 1;
                         if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
                                 insertQuad(NULL, NULL , "++" , (yyvsp[(1) - (2)].sval) , 0);
                         }
                 }
                 else {
-                        printf("Error: Variable not declared and constanttttt\n");
+                        logError("Variable is undeclared or constant", yylineno);;
                 }
         }
     break;
@@ -2960,18 +2905,19 @@ yyreduce:
   case 102:
 
 /* Line 1455 of yacc.c  */
-#line 939 "parser.y"
+#line 888 "parser.y"
     {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(1) - (2)].sval));
                 if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param) ){
+                        entry->used = 1;
                         if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
                                insertQuad(NULL, NULL , "--" , (yyvsp[(1) - (2)].sval) , 0);        
                         }
 
                 }
                 else {
-                        printf("Error: Variable not declared\n");
+                        logError("Variable is undeclared or constant", yylineno);
                 }
         }
     break;
@@ -2979,17 +2925,18 @@ yyreduce:
   case 103:
 
 /* Line 1455 of yacc.c  */
-#line 952 "parser.y"
+#line 902 "parser.y"
     {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(2) - (2)].sval));
                 if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param) ){
+                        entry->used = 1;
                         if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){                    
                                 insertQuad(NULL, NULL , "++" , (yyvsp[(2) - (2)].sval) , 0);
                         }
                 }
                 else {
-                        printf("Error: Variable not declared %d\n");
+                        logError("Variable is undeclared or constant", yylineno);
                 }
         }
     break;
@@ -2997,18 +2944,19 @@ yyreduce:
   case 104:
 
 /* Line 1455 of yacc.c  */
-#line 964 "parser.y"
+#line 915 "parser.y"
     {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(2) - (2)].sval));
                 if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param)){
+                        entry->used = 1;
                         if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
                                 insertQuad(NULL, NULL , "--" , (yyvsp[(2) - (2)].sval) , 0);
                         }
                         
                 }
                 else {
-                        printf("Error: Variable not declared\n");
+                        logError("Variable is undeclared or constant", yylineno);
                 }
         }
     break;
@@ -3016,7 +2964,7 @@ yyreduce:
   case 105:
 
 /* Line 1455 of yacc.c  */
-#line 980 "parser.y"
+#line 932 "parser.y"
     {  
                         (yyval.sval) = "=";       
                 }
@@ -3025,7 +2973,7 @@ yyreduce:
   case 106:
 
 /* Line 1455 of yacc.c  */
-#line 983 "parser.y"
+#line 935 "parser.y"
     {
                         (yyval.sval) = "+=";
                         }
@@ -3034,7 +2982,7 @@ yyreduce:
   case 107:
 
 /* Line 1455 of yacc.c  */
-#line 986 "parser.y"
+#line 938 "parser.y"
     {
                 (yyval.sval) = "-=";
         }
@@ -3043,7 +2991,7 @@ yyreduce:
   case 108:
 
 /* Line 1455 of yacc.c  */
-#line 989 "parser.y"
+#line 941 "parser.y"
     {
                 (yyval.sval) = "*=";
         }
@@ -3052,7 +3000,7 @@ yyreduce:
   case 109:
 
 /* Line 1455 of yacc.c  */
-#line 992 "parser.y"
+#line 944 "parser.y"
     {
                 (yyval.sval) = "/=";
         }
@@ -3061,12 +3009,14 @@ yyreduce:
   case 110:
 
 /* Line 1455 of yacc.c  */
-#line 998 "parser.y"
+#line 950 "parser.y"
     {
                 SymbolEntry *entry = getentryfromalltables(currTable, (yyvsp[(1) - (3)].sval));
                 if(entry != NULL && entry->kind != constant){
                         if (entry->type == (yyvsp[(3) - (3)].node)->dataType)
                         {
+                                SymbolEntry* rhs = getentryfromalltables(currTable, (yyvsp[(3) - (3)].node)->name);
+                                rhs->used = 1;
                                 int flage = 1;
                                 if((yyvsp[(2) - (3)].sval) == "="){
                                         insertQuad((yyvsp[(3) - (3)].node)->name , NULL , "=" , (yyvsp[(1) - (3)].sval) , 0);
@@ -3089,15 +3039,15 @@ yyreduce:
                                 }
                                 else {
                                         flage=0;
-                                        printf("Error: Variable not declared\n");
+                                        logError("Variable is uninitialized.", yylineno);
                                 }
                         }
                         else{
-                                printf("Error: Data Type Mismatch\n");
+                                logError("Data type mismatch.", yylineno);
                         }
                 }
                 else {
-                        printf("Error: Variable not declared ezay geet hena\n");
+                        logError("Variable is undeclared.", yylineno);
                 }
                 }
     break;
@@ -3105,7 +3055,7 @@ yyreduce:
 
 
 /* Line 1455 of yacc.c  */
-#line 3109 "y.tab.c"
+#line 3059 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -3317,7 +3267,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 1038 "parser.y"
+#line 992 "parser.y"
 
 
 Node * checkValueNotEmpty(Node* node){
@@ -3370,13 +3320,13 @@ Node * handleConditionalExpression(Node * node){
                 else if (node->nodeType == NODE_ID)
                 {
                         SymbolEntry *entry = getentryfromalltables(currTable, node->name);
-                        if(entry != NULL && entry->isInitialized){
-                                boolNode = checkValueNotEmpty(node);
-                                boolNode->name = node->name;
-                        }
-                        else{
-                                printf("Error: Variable not declared or intialized\n");
-                        }
+                        if(entry != NULL){
+                                if (entry->isInitialized) {
+                                        boolNode = checkValueNotEmpty(node);
+                                        boolNode->name = node->name;
+                                } else logError("Variable is uninitialized.", yylineno);
+
+                        } else logError("Variable is undeclared.", yylineno);
                 }
         }
         return boolNode;
@@ -3384,7 +3334,7 @@ Node * handleConditionalExpression(Node * node){
 
 Node * handleConditionalComparison(Node* first , Node* second , char* oper){
         Node * boolNode;
-        if(first->dataType == second->dataType && first->initialized && second->initialized){ 
+        if(first->dataType == second->dataType) {
                 if(strcmp(oper, "==") == 0)
                 {   
                         if(first->dataType == TYPE_INT)
@@ -3652,9 +3602,7 @@ void handleFunctionParameters(SymbolEntry ** params , Node** nodes , int argCoun
                                 insertQuad(nodes[j]->name , NULL , "=" , params[j]->name , 0);
                         }
                 }
-                else{
-                        printf("Error: Data Type Mismatch\n");
-                }
+                else logError("Data type mismatch.", yylineno);
         }
 }
 
@@ -3665,9 +3613,18 @@ char *concatenateStrings(char *str1, char *str2){
         return result;
 }
 
-int yyerror(char *s) {
-    fprintf(stderr, "Error:  %s %d\n", s , yylineno- 1);
-    return 1;
+void yyerror(char *s) {
+        FILE* syntaxErrorFile;
+        if (first_syn_err == 1) {
+                syntaxErrorFile = fopen("syntax_errors.txt", "w");
+                fprintf(syntaxErrorFile, "%s: %s at line %d\n", filename, s, yylineno);
+                first_syn_err = 0;
+        } else {
+                syntaxErrorFile = fopen("syntax_errors.txt", "a");
+                fprintf(syntaxErrorFile, "%s: %s at line %d\n", filename, s , yylineno);
+        }
+        fprintf(stderr, "%s %d\n", s , yylineno);
+        // return 0;
 }
 
 int main(int argc, char **argv) {
@@ -3675,7 +3632,8 @@ int main(int argc, char **argv) {
     if (argc > 1) {
         yyin = fopen(argv[1], "r");
         // Print file name 
-        printf("File name: %s\n", argv[1]);
+        filename = argv[1];
+        printf("File name: %s\n", filename);
         if (!yyin) {
             perror("Error opening file");
             return 1;
@@ -3687,7 +3645,8 @@ int main(int argc, char **argv) {
 
     if (yyparse() == 0) {
         printf("Parsing successful\n");
-        printTable(globalTable , false);
+        printTable(globalTable, false);
+        printUnusedVariables(globalTable, false);
         printQuadrables();
         QuadrablesToAssembly();
         return 0;

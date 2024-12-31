@@ -416,7 +416,7 @@ for_statement:
                 for_labels++;
                 insertQuad(NULL , NULL , "LABEL" , concatunate('F' , for_labels ) , 0);
                 push(&forStack , for_labels);
-        } for_stmt SEMICOLON for_step RIGHT_ROUND end_scope statement 
+        } for_stmt SEMICOLON for_step RIGHT_ROUND  statement end_scope
         {
                 int popped_for_2 = pop(&forStack);
                 int popped_for_1 = pop(&forStack);

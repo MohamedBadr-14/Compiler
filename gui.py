@@ -9,8 +9,8 @@ def select_input_file():
 def run_parser():
     input_path = input_file_path.get()
     output_path1 = "assembly.txt"
-    output_path2 = "assembly.txt"
-    output_path3 = "assembly.txt"
+    output_path2 = "syntax_errors.txt"
+    output_path3 = "semantic_errors.txt"
     
     if not input_path:
         messagebox.showerror("Error", "Input file path is required")
