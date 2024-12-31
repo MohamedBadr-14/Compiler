@@ -1,0 +1,6 @@
+Table: global
+Name: i, Type: int, Value: 0, type: 1 , isIntialized: false
+Table: local
+Name: i, Type: int, Value: 0, type: 1 , isIntialized: true
+Table: local
+Name: x, Type: int, Value: 0, type: 1 , isIntialized: false

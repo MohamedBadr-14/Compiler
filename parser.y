@@ -104,7 +104,7 @@ char* funcName;
 
 %type <node> expression assign_expression char_expression expression_statement conditional_expression conditional_if ifstatement condition_only
 %type <node> while_stmt do_while_stmt for_stmt switch_statement func_begin func_stmt_params func_call
-%type <sval>  assign_operation  
+%type <sval>  assign_operation  default_declaration
 %type <dataType> data_type
 
 %left INC DEC LT GT LTE GTE EQ NEQ AND OR NOT PLUS MINUS MULT DIV
@@ -405,11 +405,11 @@ while_stmt: conditional_if {
         $$=$1;
 };
 for_statement:
-        FOR LEFT_ROUND default_declaration {
+        FOR LEFT_ROUND start_scope default_declaration {
                 for_labels++;
                 insertQuad(NULL , NULL , "LABEL" , concatunate('F' , for_labels ) , 0);
                 push(&forStack , for_labels);
-        } for_stmt SEMICOLON for_step RIGHT_ROUND statement 
+        } for_stmt SEMICOLON for_step RIGHT_ROUND end_scope statement 
         {
                 int popped_for_2 = pop(&forStack);
                 int popped_for_1 = pop(&forStack);
@@ -687,6 +687,7 @@ default_declaration:
                         if ($1 == TYPE_INT){
                                 insertQuad($4->name , NULL , "=" , $2 , 0);
                                 SymbolEntry* entry= createSymbolEntryWithDefaults($2, var, $4->value,true,0, $1);
+                                printf("Default Declaration Data Type: %d %s %s\n", $1 , $2 , entry->isInitialized ? "true" : "false");
                                 addEntryToTable(currTable, entry);
                         }
                         else if ($1 == TYPE_DOUBLE){
@@ -709,6 +710,7 @@ default_declaration:
                                 SymbolEntry* entry= createSymbolEntryWithDefaults($2, var, $4->value,true,0, $1);
                                 addEntryToTable(currTable, entry);
                         }
+                        $$ = $2;
 
                     
                 }
@@ -1402,7 +1404,7 @@ int main(int argc, char **argv) {
 
     if (yyparse() == 0) {
         printf("Parsing successful\n");
-        printTable(globalTable);
+        printTable(globalTable , false);
         printQuadrables();
         QuadrablesToAssembly();
         return 0;

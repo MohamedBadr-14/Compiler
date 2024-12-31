@@ -116,50 +116,64 @@ void destroyTable(SymbolTable *table)
         free(table);
     }
 }
-void printTable(SymbolTable *table)
+void printTable(SymbolTable *table , bool inside_file)
 {
+    //also print in file
+    FILE * myfile2;
+    if(inside_file)
+    {
+        myfile2 = fopen("SymbolTable.txt", "a");
+    }
+    else 
+    {
+        myfile2 = fopen("SymbolTable.txt", "w");
+    }
     if (table != NULL)
     {
         printf("Table: %s\n", table->name);
+        fprintf(myfile2, "Table: %s\n", table->name);
         for (int i = 0; i < table->size; i++)
-        
         {
             if(table->entries[i]->kind == func)
             {
-                // loop on params to print
-                printf("nammmmmmmmmmmmmmmmmmmmmmmmmmmmmm\n");
-                printf("Name: %s, Type: %d, Value: %d type: %d\n", table->entries[i]->name, table->entries[i]->type, table->entries[i]->value.iVal, table->entries[i]->kind);
+                fprintf(myfile2, "Name: %s, DataType: %d, type: %d  \n", table->entries[i]->name, table->entries[i]->type, table->entries[i]->kind);
+                printf("Name: %s, DataType: %d, type: %d  \n", table->entries[i]->name, table->entries[i]->type, table->entries[i]->kind);
                 for(int j = 0 ; j < table->entries[i]->argCount ; j++)
                 {
-                    printf("Name: %s, Type: %d, Value: %d type: %d\n", table->entries[i]->parameters[j]->name, table->entries[i]->parameters[j]->type, table->entries[i]->parameters[j]->value.iVal, table->entries[i]->parameters[j]->kind);
+                    fprintf(myfile2, "Name: %s, Type: %d, type: %d\n", table->entries[i]->parameters[j]->name, table->entries[i]->parameters[j]->type, table->entries[i]->parameters[j]->kind);
+                    printf("Name: %s, Type: %d, type: %d\n", table->entries[i]->parameters[j]->name, table->entries[i]->parameters[j]->type, table->entries[i]->parameters[j]->kind);
                 }
-                printf("afallllllllllllllllllllllllllllllllllllllllllllllllllt)\n");
             }
 
             if (table->entries[i]->type == TYPE_INT)
             {
-                printf("Name: %s, Type: int, Value: %d type: %d\n", table->entries[i]->name, table->entries[i]->value.iVal, table->entries[i]->kind);
+                fprintf(myfile2, "Name: %s, Type: int, Value: %d, type: %d , isIntialized: %s\n", table->entries[i]->name, table->entries[i]->isInitialized ? table->entries[i]->value.iVal : 0, table->entries[i]->kind , table->entries[i]->isInitialized ? "true" : "false");
+                printf("Name: %s, Type: int, Value: %d, type: %d , isIntialized: %s\n", table->entries[i]->name, table->entries[i]->isInitialized ? table->entries[i]->value.iVal : 0, table->entries[i]->kind , table->entries[i]->isInitialized ? "true" : "false");
             }
             else if (table->entries[i]->type == TYPE_DOUBLE)
             {
-                printf("Name: %s, Type: double, Value: %f type: %d\\n", table->entries[i]->name, table->entries[i]->value.dVal , table->entries[i]->kind);
+                fprintf(myfile2, "Name: %s, Type: double, Value: %d, type: %d , isIntialized: %s\n", table->entries[i]->name, table->entries[i]->isInitialized ? table->entries[i]->value.dVal : 0.0, table->entries[i]->kind , table->entries[i]->isInitialized ? "true" : "false");
+                printf("Name: %s, Type: double, Value: %d, type: %d , isIntialized: %s\n", table->entries[i]->name, table->entries[i]->isInitialized ? table->entries[i]->value.dVal : 0.0, table->entries[i]->kind , table->entries[i]->isInitialized ? "true" : "false");
             }
             else if (table->entries[i]->type == TYPE_CHAR)
             {
-                printf("Name: %s, Type: char, Value: %s type: %d\\n", table->entries[i]->name, table->entries[i]->value.cVal , table->entries[i]->kind);
+                fprintf(myfile2, "Name: %s, Type: char, Value: %s, type: %d , isIntialized: %s\n", table->entries[i]->name, table->entries[i]->isInitialized ? table->entries[i]->value.cVal : " ", table->entries[i]->kind , table->entries[i]->isInitialized ? "true" : "false");
+                printf("Name: %s, Type: char, Value: %s, type: %d , isIntialized: %s\n", table->entries[i]->name, table->entries[i]->isInitialized ? table->entries[i]->value.cVal : " ", table->entries[i]->kind , table->entries[i]->isInitialized ? "true" : "false");
             }
             else if (table->entries[i]->type == TYPE_STRING)
             {
-                printf("Name: %s, Type: string, Value: %s type: %d\\n", table->entries[i]->name, table->entries[i]->value.strVal , table->entries[i]->kind);
+                fprintf(myfile2, "Name: %s, Type: string, Value: %s, type: %d , isIntialized: %s\n", table->entries[i]->name, table->entries[i]->isInitialized ? table->entries[i]->value.strVal : " ", table->entries[i]->kind , table->entries[i]->isInitialized ? "true" : "false");
+                printf("Name: %s, Type: string, Value: %s, type: %d , isIntialized: %s\n", table->entries[i]->name, table->entries[i]->isInitialized ? table->entries[i]->value.strVal: " ", table->entries[i]->kind , table->entries[i]->isInitialized ? "true" : "false");
             }
             else if (table->entries[i]->type == TYPE_BOOL)
             {
-                printf("Name: %s, Type: bool, Value: %s type: %d\\n", table->entries[i]->name, table->entries[i]->value.bVal? "true" : "false" , table->entries[i]->kind);
+                fprintf(myfile2, "Name: %s, Type: bool, Value: %d, type: %d , isIntialized: %s\n", table->entries[i]->name, table->entries[i]->isInitialized ? table->entries[i]->value.bVal : false, table->entries[i]->kind , table->entries[i]->isInitialized ? "true" : "false");
+                printf("Name: %s, Type: bool, Value: %d, type: %d , isIntialized: %s\n", table->entries[i]->name, table->entries[i]->isInitialized ? table->entries[i]->value.bVal : false, table->entries[i]->kind , table->entries[i]->isInitialized ? "true" : "false");
             }
         }
         for (int i = 0; i < table->childCount; i++)
         {
-            printTable(table->children[i]);
+            printTable(table->children[i] , true);
         }
     }
 }
