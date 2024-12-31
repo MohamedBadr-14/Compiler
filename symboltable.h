@@ -152,8 +152,9 @@ void printTable(SymbolTable *table , bool inside_file)
             }
             else if (table->entries[i]->type == TYPE_DOUBLE)
             {
-                fprintf(myfile2, "Name: %s, Type: double, Value: %d, type: %d , isIntialized: %s\n", table->entries[i]->name, table->entries[i]->isInitialized ? table->entries[i]->value.dVal : 0.0, table->entries[i]->kind , table->entries[i]->isInitialized ? "true" : "false");
-                printf("Name: %s, Type: double, Value: %d, type: %d , isIntialized: %s\n", table->entries[i]->name, table->entries[i]->isInitialized ? table->entries[i]->value.dVal : 0.0, table->entries[i]->kind , table->entries[i]->isInitialized ? "true" : "false");
+                // printf("MOSHKELA HENA %s\n" , table->entries[i]->name);
+                fprintf(myfile2, "Name: %s, Type: double, Value: %.1f, type: %d , isIntialized: %s\n", table->entries[i]->name, table->entries[i]->isInitialized ? table->entries[i]->value.dVal : 0.0, table->entries[i]->kind , table->entries[i]->isInitialized ? "true" : "false");
+                printf("Name: %s, Type: double, Value: %.1f, type: %d , isIntialized: %s\n", table->entries[i]->name, table->entries[i]->isInitialized ? table->entries[i]->value.dVal : 0.0 , table->entries[i]->kind , table->entries[i]->isInitialized ? "true" : "false");
             }
             else if (table->entries[i]->type == TYPE_CHAR)
             {

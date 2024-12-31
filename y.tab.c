@@ -2702,7 +2702,7 @@ yyreduce:
                         (yyval.node) = node;
                 }
                 else{
-                        printf("Error: Variable not declared or intialized\n");
+                        printf("Error: Variable not declared or intializeddd\n");
                 }
                 
         }
@@ -3384,7 +3384,7 @@ Node * handleConditionalExpression(Node * node){
 
 Node * handleConditionalComparison(Node* first , Node* second , char* oper){
         Node * boolNode;
-        if(first->dataType == second->dataType) {
+        if(first->dataType == second->dataType && first->initialized && second->initialized){ 
                 if(strcmp(oper, "==") == 0)
                 {   
                         if(first->dataType == TYPE_INT)
