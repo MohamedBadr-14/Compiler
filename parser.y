@@ -16,7 +16,7 @@ int first_sem_err = 1;
 int first_syn_err = 1;
 
 int yylex(void);
-int yyerror(char *s);
+void yyerror(char *s);
 //read from text file
 extern FILE *yyin;
 //symbol table
@@ -147,7 +147,7 @@ start:{
 
 statements:
         statements statement 
-        | statement    
+        | statement
         ;
 
 statement:
@@ -875,63 +875,56 @@ unary_expression:
         IDENTIFIER INC {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
-                if(entry != NULL && entry->kind == param) {
+                if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param) ){
                         entry->used = 1;
-                        if (entry->kind != constant) {
-                                if (entry->isInitialized) {
-                                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
-                                                insertQuad(NULL, NULL , "++" , $1 , 0);
-                                        } else logError("Only int and double values can use this operator.", yylineno);
-                                } else logError("Variable is uninitialized.", yylineno);
-                        } else logError("Cannot modify constants.", yylineno);
+                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
+                                insertQuad(NULL, NULL , "++" , $1 , 0);
+                        }
                 }
-                else logError("Variable is undeclared.", yylineno);
+                else {
+                        logError("Variable is undeclared or constant", yylineno);;
+                }
         }
       | IDENTIFIER DEC {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
-                if(entry != NULL && entry->kind == param) {
+                if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param) ){
                         entry->used = 1;
-                        if (entry->kind != constant) {
-                                if (entry->isInitialized) {
-                                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
-                                        insertQuad(NULL, NULL , "--" , $1 , 0);        
-                                        } else logError("Only int and double values can use this operator.", yylineno);
-                                } else logError("Variable is uninitialized.", yylineno);
-                        } else logError("Cannot modify constants.", yylineno);
+                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
+                               insertQuad(NULL, NULL , "--" , $1 , 0);        
+                        }
 
-                } else logError("Variable is undeclared.", yylineno);
+                }
+                else {
+                        logError("Variable is undeclared or constant", yylineno);
+                }
         }
       | INC IDENTIFIER {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $2);
-                if(entry != NULL && entry->kind == param) {
+                if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param) ){
                         entry->used = 1;
-                        if (entry->kind != constant) {
-                                if (entry->isInitialized) {
-                                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){                    
-                                                insertQuad(NULL, NULL , "++" , $2 , 0);
-                                        } else logError("Only int and double values can use this operator.", yylineno);
-                                } else logError("Variable is uninitialized.", yylineno);
-                        } else logError("Cannot modify constants.", yylineno);
+                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){                    
+                                insertQuad(NULL, NULL , "++" , $2 , 0);
+                        }
                 }
-                else logError("Variable is undeclared.", yylineno);
+                else {
+                        logError("Variable is undeclared or constant", yylineno);
+                }
         }
       | DEC IDENTIFIER {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $2);
-                if(entry != NULL && entry->kind == param){
+                if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param)){
                         entry->used = 1;
-                        if (entry->kind != constant) {
-                                if (entry->isInitialized) {
-                                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
-                                                insertQuad(NULL, NULL , "--" , $2 , 0);
-                                        } else logError("Only int and double values can use this operator.", yylineno);
-                                } else logError("Variable is uninitialized.", yylineno);
-                        } else logError("Cannot modify constants.", yylineno);
+                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
+                                insertQuad(NULL, NULL , "--" , $2 , 0);
+                        }
                         
                 }
-                else logError("Variable is undeclared.", yylineno);
+                else {
+                        logError("Variable is undeclared or constant", yylineno);
+                }
         }
       ;
 
@@ -956,40 +949,44 @@ assign_operation:
 assign_expression:
         IDENTIFIER assign_operation expression {
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
-                if(entry != NULL) {
-                        entry->used = 1;
-                        if (entry->kind != constant) {
-                                if (entry->type == $3->dataType)
-                                {
-                                        int flage = 1;
-                                        if($2 == "="){
-                                                insertQuad($3->name , NULL , "=" , $1 , 0);
+                if(entry != NULL && entry->kind != constant){
+                        if (entry->type == $3->dataType)
+                        {
+                                SymbolEntry* rhs = getentryfromalltables(currTable, $3->name);
+                                rhs->used = 1;
+                                int flage = 1;
+                                if($2 == "="){
+                                        insertQuad($3->name , NULL , "=" , $1 , 0);
+                               
+                                }           
+                                else if($2 == "+=" && entry->isInitialized){
+                                        insertQuad($1,$3->name  , "+" , $1 , 0);
+                               
+                                }
+                                else if($2 == "-=" && entry->isInitialized){
+                                        insertQuad( $1 ,$3->name  , "-" , $1 , 0);
                                 
-                                        }           
-                                        else if($2 == "+=" && entry->isInitialized){
-                                                insertQuad($1,$3->name  , "+" , $1 , 0);
+                                }
+                                else if($2 == "*=" && entry->isInitialized){
+                                        insertQuad($1 , $3->name  , "*" , $1 , 0);
                                 
-                                        }
-                                        else if($2 == "-=" && entry->isInitialized){
-                                                insertQuad( $1 ,$3->name  , "-" , $1 , 0);
-                                        
-                                        }
-                                        else if($2 == "*=" && entry->isInitialized){
-                                                insertQuad($1 , $3->name  , "*" , $1 , 0);
-                                        
-                                        }
-                                        else if($2 == "/=" && entry->isInitialized){
-                                                insertQuad($1 , $3->name  , "/" , $1 , 0);
-                                        }
-                                        else {
-                                                flage=0;
-                                                logError("Variable is uninitialized.", yylineno);
-                                        }
-                                } else logError("Data type mismatch.", yylineno);
-
-                        } else logError("Cannot modify constants.", yylineno);
-                } else logError("Variable is undeclared.", yylineno);
-        }
+                                }
+                                else if($2 == "/=" && entry->isInitialized){
+                                        insertQuad($1 , $3->name  , "/" , $1 , 0);
+                                }
+                                else {
+                                        flage=0;
+                                        logError("Variable is uninitialized.", yylineno);
+                                }
+                        }
+                        else{
+                                logError("Data type mismatch.", yylineno);
+                        }
+                }
+                else {
+                        logError("Variable is undeclared.", yylineno);
+                }
+                }
         ;        
 
 %%
@@ -1337,7 +1334,7 @@ char *concatenateStrings(char *str1, char *str2){
         return result;
 }
 
-int yyerror(char *s) {
+void yyerror(char *s) {
         FILE* syntaxErrorFile;
         if (first_syn_err == 1) {
                 syntaxErrorFile = fopen("syntax_errors.txt", "w");
@@ -1348,7 +1345,7 @@ int yyerror(char *s) {
                 fprintf(syntaxErrorFile, "%s: %s at line %d\n", filename, s , yylineno);
         }
         fprintf(stderr, "%s %d\n", s , yylineno);
-        return 1;
+        // return 0;
 }
 
 int main(int argc, char **argv) {

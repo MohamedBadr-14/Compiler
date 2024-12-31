@@ -185,9 +185,10 @@ void printUnusedVariables(SymbolTable *table)
     {
         for (int i = 0; i < table->size; i++)
         {
-            if (table->entries[i]->used == 0)
+            if (table->entries[i]->used == 0 && (table->entries[i]->kind == var || table->entries[i]->kind == constant)) {
                 printf("Variable: %s is not used.\n", table->entries[i]->name);
-                fprintf(unused_variables, "Variable: %s is not used.\n", table->entries[i]->name);
+                fprintf(unused_variables, "Variable: %s is not used.\n", table->entries[i]->name); 
+            }
         }
         for (int i = 0; i < table->childCount; i++)
             printUnusedVariables(table->children[i]);
