@@ -1,0 +1,19 @@
+int x = 0;
+if(false){
+    x++;
+    if(true){
+        x++;
+    }   
+    else{
+        x++;
+    }
+}
+else {
+    if(true){
+        x++;
+    }   
+    else{
+        x++;
+    }
+    int y = 0 ;
+}

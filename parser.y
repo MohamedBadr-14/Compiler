@@ -7,6 +7,7 @@
 #include "symboltable.h"
 #include "symbolentry.h"
 #include "quad.h"
+#include "stack.h"
 
 
 extern int yylineno;
@@ -19,10 +20,46 @@ SymbolTable *globalTable;
 SymbolTable *currTable;
 SymbolTable *tempTable;
 
+
+Stack ifStack;
+Stack whileStack;
+Stack do_whileStack;
+Stack forStack;
+Stack switchStack;
+Node **params;
+void initialize() {
+        initializeStack(&ifStack);
+        initializeStack(&whileStack);
+        initializeStack(&do_whileStack);
+        initializeStack(&forStack);
+        initializeStack(&switchStack);
+        params = (Node **)malloc(0);
+}
+//FUNCTIONS
+Node * handleConditionalExpression(Node * node);
+Node * handleConditionalComparison(Node * first , Node * second , char* operand);
+char * concatenateStrings(char * first , char * second);
+void handleFunctionParameters(SymbolEntry ** enter , Node** nodes , int argCont);
+
 int scope = 0;
 // extern int yylineno;
 //symbol entry
 int tempCount = 0;
+int labels=0;
+int while_labels=0;
+int do_while_labels = 0;
+int for_labels = 0;
+int ifCount = 0;
+int switchCount = 0;
+int caseCount = 0;
+int paramCount = 0;
+bool isElse= false;
+bool isDefault = false;
+int elseCount = 0;
+int popped  = 0;
+int popped_while = 0;
+int popped_for = 0;
+char* funcName;
 %}
 
 %union {
@@ -65,8 +102,9 @@ int tempCount = 0;
 %token AND OR NOT
 %token UNKNOWN COLON BREAK DEFAULT 
 
-%type <node> expression assign_expression
-%type <sval>  assign_operation
+%type <node> expression assign_expression char_expression expression_statement conditional_expression conditional_if ifstatement condition_only
+%type <node> while_stmt do_while_stmt for_stmt switch_statement func_begin func_stmt_params func_call
+%type <sval>  assign_operation  
 %type <dataType> data_type
 
 %left INC DEC LT GT LTE GTE EQ NEQ AND OR NOT PLUS MINUS MULT DIV
@@ -98,10 +136,10 @@ statement:
         ;
 
 scoped_statement:
-        start_scope  statements end_scope
+        LEFT_CURLY start_scope statements RIGHT_CURLY end_scope
         ;
 start_scope:
-        LEFT_CURLY {printf("Start Scope\n");
+         {printf("Start Scope\n");
         scope++;
         tempTable = createSymbolTable("local",scope, currTable);
         addChildToTable(currTable, tempTable);
@@ -109,7 +147,7 @@ start_scope:
         }
         ;
 end_scope:
-        RIGHT_CURLY {printf("End Scope\n");
+        {printf("End Scope\n");
         scope--;
         currTable = currTable->parent;
         }
@@ -133,91 +171,498 @@ one_line_statement:
 
 
 switch_statement:
-        SWITCH LEFT_ROUND expression RIGHT_ROUND start_scope switch_cases end_scope {printf("Switch Statement\n");}
+        SWITCH LEFT_ROUND expression_statement {
+                switchCount++;
+                push(&switchStack , switchCount);
+        } RIGHT_ROUND LEFT_CURLY start_scope switch_cases {
+                if(!isDefault)
+                {
+                        char*label= concatunate('C' , caseCount);
+                        insertQuad($3->name , NULL , "LABEL" , label , 0);
+                        isDefault = false;
+                }
+        }RIGHT_CURLY end_scope { 
+                int popped_switch = pop(&switchStack);
+                char*label= concatunate('S' , popped_switch);
+                insertQuad($3->name , NULL , "LABEL" , label , 0);
+
+                
+        }
         ;
 switch_cases:
-        switch_case
-        | switch_cases switch_case
+        switch_case     {
+                int popped_switch = peek(&switchStack);
+                char*label= concatunate('S' , popped_switch);
+                insertQuad(NULL , NULL , "JMP" , label , 0);
+        }
+        | switch_cases switch_case 
+        {
+                int popped_switch = peek(&switchStack);
+                char*label= concatunate('S' , popped_switch);
+                insertQuad(NULL , NULL , "JMP" , label , 0);
+        }
         ;
+cases:
+        CASE expression {
+                char*label_1= concatunate('C' , caseCount);
+                insertQuad(NULL , NULL , "LABEL" , label_1 , 0);
+                if(!isDefault)
+                {
+                        caseCount++;
+                        char*label= concatunate('C' , caseCount);
+                        insertQuad($2->name , NULL , "JZ" , label , 0);
+                }
+        } COLON ;
 switch_case:
-        CASE expression COLON statements BREAK SEMICOLON
-        | CASE expression COLON BREAK SEMICOLON
-        | DEFAULT COLON statements BREAK SEMICOLON
-        | DEFAULT COLON  BREAK SEMICOLON
+        cases statements BREAK SEMICOLON //check with fouda
+        | cases BREAK SEMICOLON
+        | DEFAULT COLON {
+                isDefault = true;
+                char*label_1= concatunate('C' , caseCount);
+                insertQuad(NULL , NULL , "LABEL" , label_1 , 0);
+        } statements BREAK SEMICOLON
+        | DEFAULT COLON {
+                isDefault = true;
+                char*label_1= concatunate('C' , caseCount);
+                insertQuad(NULL , NULL , "LABEL" , label_1 , 0);
+        } BREAK SEMICOLON
         ;
 
+func_begin:  data_type IDENTIFIER LEFT_ROUND {
+               
+                printf("Data func Identifier\n");
+                union Value val;
+                SymbolEntry* entry= createSymbolEntryWithDefaults($2, func,val,false,0,$1); 
+                addEntryToTable(currTable, entry);
+                Node* node = createIDNode($2, scope, entry->type);
+                funcName = $2;
+                $$ = node;
+        }
+
+func_stmt_params:
+       func_begin start_scope  func_params { $$ = $1; }
+        ;
+        
+
 func_statement:
-        data_type IDENTIFIER LEFT_ROUND RIGHT_ROUND statement {printf("Function Statement no params\n");}
-        | data_type IDENTIFIER LEFT_ROUND RIGHT_ROUND SEMICOLON {printf("Function Statement no params\n");}
-        | data_type IDENTIFIER LEFT_ROUND func_params RIGHT_ROUND statement {printf("Function Statement\n");}
-        | data_type IDENTIFIER LEFT_ROUND func_params RIGHT_ROUND SEMICOLON {printf("Function Statement\n");}
+  
+        func_begin RIGHT_ROUND{
+                SymbolEntry *entry = getentryfromalltables(currTable, $1->name);
+                if(entry != NULL && entry->kind == func){
+                        if(entry->argCount == 0){
+                                char* start = concatenateStrings( $1->name, "_START");
+                                insertQuad(NULL , NULL , "LABEL" , start , 0);
+                        }
+                        else{
+                                printf("Error: Function is with parameters\n");
+                        }
+                }
+                else{
+                        printf("Error: Function not declared\n");
+                }
+        } statement {
+                SymbolEntry *entry = getentryfromalltables(currTable, $1->name);
+                if(entry != NULL && entry->kind == func){
+                        if(entry->argCount == 0){
+                                char* end = concatenateStrings( $1->name, "_END");
+                                insertQuad(NULL , NULL , "JMP" , end , 0);
+                        }
+                }
+        }
+        // | func_begin RIGHT_ROUND SEMICOLON {printf("Function Statement no params\n");}
+        | func_stmt_params RIGHT_ROUND {
+                SymbolEntry *entry = getentryfromalltables(currTable, $1->name);
+                if(entry != NULL && entry->kind == func){
+                                char* start = concatenateStrings( $1->name, "_START");
+                                insertQuad(NULL , NULL , "LABEL" , start , 0);
+                }
+                else{
+                        printf("Error: Function not declared\n");
+                }
+        
+        }statement end_scope  {
+                SymbolEntry *entry = getentryfromalltables(currTable, $1->name);
+                if(entry != NULL && entry->kind == func){
+                        char* end = concatenateStrings( $1->name, "_END");
+                        insertQuad(NULL , NULL , "JMP" , end , 0);
+                        
+                }
+        }
+        // | func_stmt_params RIGHT_ROUND SEMICOLON  {printf("Function Statement\n");}
         ;
 func_params:
-        data_type IDENTIFIER
-        | func_params COMMA data_type IDENTIFIER    {printf("COMAAAA\n");}
+        data_type IDENTIFIER {         printf("Data Type Identifier\n");
+                union Value val;
+                SymbolEntry* entry= createSymbolEntryWithDefaults($2, param,val,false,0,$1); 
+                addEntryToTable(currTable, entry);
+                SymbolEntry* entryfunc = getentryfromalltables(currTable, funcName);
+                printf("entryfunc %s\n", entryfunc->name);
+                addparam(entryfunc,entry);       
+                
+                }
+        | func_params COMMA data_type IDENTIFIER    {         printf("Data Type Identifier\n");
+                union Value val;
+                SymbolEntry* entry= createSymbolEntryWithDefaults($4, param,val,false,0,$3); 
+                addEntryToTable(currTable, entry);
+                      SymbolEntry* entryfunc = getentryfromalltables(currTable, funcName);
+                addparam(entryfunc,entry);
+
+                
+                }
         ;
 func_call_parameter:
-        expression
-        | func_call_parameter COMMA expression
+        expression_statement{
+                params = (Node **)realloc(params, (paramCount + 1) * sizeof(Node*));
+                params[paramCount] = $1;
+                paramCount++;
+        }
+        | func_call_parameter COMMA expression_statement{
+                params = (Node **)realloc(params, (paramCount + 1) * sizeof(Node*));
+                params[paramCount] = $3;
+                paramCount++;
+        }
+        ;
+func_call:
+        IDENTIFIER LEFT_ROUND RIGHT_ROUND {
+                SymbolEntry *entry = getentryfromalltables(currTable, $1);
+                if(entry != NULL && entry->kind == func){
+                        if(entry->argCount == 0){
+                                printf("Function Call\n");
+                                char* start = concatenateStrings( $1, "_START");
+                                insertQuad(NULL , NULL , "JMP" , start , 0);
+                                char* end = concatenateStrings( $1, "_END");
+                                insertQuad(NULL , NULL , "LABEL" , end , 0);
+                                Node* node = createIDNode($1, scope, entry->type);
+                                $$ = node;
+
+                        }
+                        else{
+                                printf("Error: Function is with parameters\n");
+                        }
+                }
+                else{
+                        printf("Error: Function not declared\n");
+                }
+        }
+        | IDENTIFIER LEFT_ROUND func_call_parameter RIGHT_ROUND {
+                SymbolEntry *entry = getentryfromalltables(currTable, $1);
+                if(entry != NULL && entry->kind == func){
+                        if(entry->argCount == paramCount){
+                                handleFunctionParameters(entry->parameters , params, paramCount);
+                                char* start = concatenateStrings( $1, "_START");
+                                insertQuad(NULL , NULL , "JMP" , start , 0);
+                                char* end = concatenateStrings( $1, "_END");
+                                insertQuad(NULL , NULL , "LABEL" , end , 0);
+                                Node* node = createIDNode($1, scope, entry->type);
+                                $$ = node;
+                        }
+                        else{
+                                printf("Error: Function is with parameters %d\n" , entry->argCount);
+                        }
+                }
+                else{
+                        printf("Error: Function not declared\n");
+                }
+        }
+        ;
+do_while_stmt: conditional_if {
+        int popped_do_while = pop(&do_whileStack);
+        char*label= concatunate('D' , popped_do_while);
+        insertQuad($1->name , NULL , "JZ" , label , 0);
+        $$=$1;
+};
+do_word:
+        DO      {
+                do_while_labels++;
+                insertQuad(NULL , NULL , "LABEL" , concatunate('D' , do_while_labels ) , 0);
+                push(&do_whileStack , do_while_labels);
+        }
         ;
 
 do_while_statement:
-        DO statement WHILE LEFT_ROUND conditional_expression RIGHT_ROUND SEMICOLON {printf("Do While Statement\n");}
+        do_word statement WHILE LEFT_ROUND do_while_stmt RIGHT_ROUND SEMICOLON {printf("Do While Statement\n");}
         ;
 while_statement:
-        WHILE LEFT_ROUND conditional_expression RIGHT_ROUND statement {printf("While Statement\n");}
-        ;
-for_statement:
-        FOR LEFT_ROUND default_declaration  conditional_expression SEMICOLON for_step RIGHT_ROUND statement {printf("For Statement\n");}
-        ;
+        WHILE LEFT_ROUND while_stmt RIGHT_ROUND statement { 
+                int popped_while_1 = pop(&whileStack);
+                int popped_while_2 = pop(&whileStack);
+                char*label_1= concatunate('W' , popped_while_1);
+                char*label_2= concatunate('W' , popped_while_2);
+                insertQuad(NULL , NULL , "JMP" ,label_2  , 0);
+                insertQuad(NULL , NULL , "LABEL" ,label_1  , 0);
 
+        }
+        ;
+while_stmt: conditional_if {
+        while_labels++;
+        insertQuad(NULL , NULL , "LABEL" , concatunate('W' , while_labels ) , 0);
+        push(&whileStack , while_labels);
+        while_labels++;
+        insertQuad($1->name , NULL , "JZ" , concatunate('W' , while_labels ) , 0);
+        push(&whileStack , while_labels);
+        $$=$1;
+};
+for_statement:
+        FOR LEFT_ROUND default_declaration {
+                for_labels++;
+                insertQuad(NULL , NULL , "LABEL" , concatunate('F' , for_labels ) , 0);
+                push(&forStack , for_labels);
+        } for_stmt SEMICOLON for_step RIGHT_ROUND statement 
+        {
+                int popped_for_2 = pop(&forStack);
+                int popped_for_1 = pop(&forStack);
+                char*label_1= concatunate('F' , popped_for_1);
+                char*label_2= concatunate('F' , popped_for_2);
+                insertQuad(NULL , NULL , "JMP" ,label_1  , 0);
+                insertQuad(NULL , NULL , "LABEL" ,label_2  , 0);
+        }
+        ;
+for_stmt:
+        conditional_expression {
+                for_labels++;
+                insertQuad($1->name , NULL , "JZ" , concatunate('F' , for_labels ) , 0);
+                push(&forStack , for_labels);
+                $$=$1;
+        }
 for_step:
         assign_expression 
         | unary_expression
         ;
+if_only:
+        IF LEFT_ROUND {labels++;} ifstatement RIGHT_ROUND statement  
+ 
 conditional_statement:
-        IF LEFT_ROUND conditional_if RIGHT_ROUND statement %prec LOWER_THAN_ELSE {printf("If Statement\n");}
-        | IF LEFT_ROUND conditional_if RIGHT_ROUND statement ELSE statement {printf("If Else Statement\n");}
+        if_only %prec LOWER_THAN_ELSE {
+                popped = pop(&ifStack);
+                char*label= concatunate('L' , popped);
+
+                insertQuad(NULL , NULL , "LABEL" ,label  , 0);
+        }
+        | if_only ELSE {
+                isElse = true;
+                printf("If Statement\n");
+                labels++;
+                char*label_2= concatunate('L' , labels);
+                popped = pop(&ifStack);
+                char*label= concatunate('L' , popped);
+                push(&ifStack , labels);
+
+                insertQuad(NULL , NULL , "JMP" ,label_2 , 0);
+                insertQuad(NULL , NULL , "LABEL" ,label  , 0);
+                } statement  {
+                        popped = pop(&ifStack);
+                        char*label= concatunate('L' , popped);
+                        insertQuad(NULL , NULL , "LABEL" ,label  , 0);
+                }
         ;
+
+ifstatement: conditional_if { 
+        insertQuad($1->name , NULL , "JZ" , concatunate('L' , labels) , 0);
+        push(&ifStack , labels);
+        $$=$1;
+
+}
 
 conditional_if:
-        conditional_expression          {printf("Conditional Expression\n");}
-        | conditional_expression AND conditional_if
+        conditional_expression          {
+                printf("Conditional If: %s\n" , $1->name);
+                $$ = $1;}
+        | conditional_expression AND conditional_if { 
+                tempCount++;
+                Node * boolNode = createBoolNode($1->value.bVal && $3->value.bVal , scope , tempCount , false);
+                insertQuad($1->name , $3->name , "&&" , boolNode->name , 0);    
+                $$ = boolNode;  
+                
+        }
         | conditional_expression OR conditional_if
-        | NOT conditional_expression
+        {
+                tempCount++;
+                Node * boolNode = createBoolNode($1->value.bVal || $3->value.bVal , scope , tempCount , false);     
+                insertQuad($1->name , $3->name , "||" , boolNode->name , 0);    
+                $$ = boolNode;
+        }
         ;
+condition_only:
+        expression LT expression       { 
+                if($1->dataType == $3->dataType){
+                                
+                        Node * boolNode = handleConditionalComparison($1, $3, "<");
+                        if (boolNode != NULL){
+                                printf("LESS THAN %d\n" , boolNode->value.bVal ? 1:0);
+                                $$ = boolNode;
+                        }
+                        else{
+                                printf("Error: MOSHKELA\n");
+                        }
+                }
+                else{
+                        printf("Error: Data Type Mismatch\n");
+                }
+        }
+        | expression GT expression      {
+                if($1->dataType == $3->dataType)
+                {
+                                Node * boolNode = handleConditionalComparison($1, $3, ">");
+                        if (boolNode != NULL){
+                                printf("Greater THAN %d\n" , boolNode->value.bVal ? 1:0);
+                                $$ = boolNode;
+                        }
+                        else{
+                                printf("Error: MOSHKELA\n");
+                        }
+                }
+                else {
+                        printf("Error: Data Type Mismatch\n");
+                }
+        }
+        | expression LTE expression {
+                if($1->dataType == $3->dataType)
+                {
+                        Node * boolNode = handleConditionalComparison($1, $3, "<=");
+                        if (boolNode != NULL){
+                                printf("LESS THAN or equal %d\n" , boolNode->value.bVal ? 1:0);
+                                $$ = boolNode;
+                        }
+                        else{
+                                printf("Error: MOSHKELA\n");
+                        }
+                }
+                else {
+                        printf("Error: Data Type Mismatch\n");
+                }
+        }
+        | expression GTE expression {
+                if($1->dataType == $3->dataType)
+                {
+                        Node * boolNode = handleConditionalComparison($1, $3, ">=");
+                        if (boolNode != NULL){
+                                printf("greater THAN equal %d\n" , boolNode->value.bVal ? 1:0);
+                                $$ = boolNode;
+                        }
+                        else{
+                                printf("Error: MOSHKELA\n");
+                        }
+                }
+                else {
+                        printf("Error: Data Type Mismatch\n");
+                }
+        }
+        | expression EQ expression {
+                if($1->dataType == $3->dataType)
+                {
+                        Node * boolNode = handleConditionalComparison($1, $3, "==");
+                        if (boolNode != NULL){
+                                printf("equal  %d\n" , boolNode->value.bVal ? 1:0);
+                                $$ = boolNode;
+                        }
+                        else{
+                                printf("Error: MOSHKELA\n");
+                        }
+                }
+                else {
+                        printf("Error: Data Type Mismatch\n");
+                }
+        }
+        | expression NEQ expression {
+               if($1->dataType == $3->dataType)
+               { 
+                        Node * boolNode = handleConditionalComparison($1, $3, "!=");
+                        if (boolNode != NULL){
+                                $$ = boolNode;
+                                printf("not equal %d\n" , boolNode->value.bVal ? 1:0);
+                        }
+                        else{
+                                printf("Error: MOSHKELA\n");
+                        }
+                }
+                else {
+                        printf("Error: Data Type Mismatch\n");
+                }
+        }
+        | LEFT_ROUND condition_only RIGHT_ROUND {$$ = $2;}
+        | BOOL {
+                Node* boolNode;
+                if ($1)
+                {
+                        boolNode = createBoolNode(true , scope , tempCount , true);
+                }
+                else {
+                        boolNode = createBoolNode(false , scope, tempCount , true);
+                }
+        };
+
 
 conditional_expression:
-        expression
-        | expression LT expression      {printf("Less Than\n");}
-        | expression GT expression      {printf("Greater Than\n");}
-        | expression LTE expression
-        | expression GTE expression
-        | expression EQ expression
-        | expression NEQ expression
-        | BOOL
+        expression_statement            {
+                if($1->nodeType == NODE_ID)
+                {
+                        printf("Conditional Expression\n");
+                Node * boolNode = handleConditionalExpression($1);
+                if (boolNode != NULL){
+                        printf("3azeemm %d\n" , boolNode->value.bVal ? 1:0);
+                        $$ = boolNode;
+                }
+                else{
+                        printf("Error: MOSHKELA\n");
+                }
+                }
+                else {
+                        printf("GHALATTTTTT");
+                }
+        }
+        | condition_only {$$=$1;}
+        | NOT conditional_expression {
+                tempCount++;
+                Node * boolNode = createBoolNode(!$2->value.bVal , scope , tempCount , false);    
+                insertQuad(NULL , $2->name , "!" , boolNode->name , 0); 
+                $$ = boolNode;
+        }
         ;
 
 special_declaration:
-        CONST data_type IDENTIFIER EQU expression SEMICOLON   {    
-                SymbolEntry *entry=createSymbolEntry($3, constant, $5->value,true,0,$2, 1, 0, NULL, "");
-                addEntryToTable(currTable, entry);
-                insertQuad($5->name , NULL , "=" , $3 , 0);
+        CONST data_type IDENTIFIER EQU expression_statement SEMICOLON   {
+                if ($2 == $5->dataType){
+                        if ($2 == TYPE_INT){
+                                SymbolEntry *entry=createSymbolEntry($3, constant, $5->value,true,0,$2, 1, 0, NULL, "");
+                                addEntryToTable(currTable, entry);
+                                insertQuad($5->name , NULL , "=" , $3 , 0);
+                        }
+                        else if ($2 == TYPE_DOUBLE){
+                                SymbolEntry *entry=createSymbolEntry($3, constant, $5->value,true,0,$2, 1, 0, NULL, "");
+                                addEntryToTable(currTable, entry);
+                                insertQuad($5->name , NULL , "=" , $3 , 0);
+                        }
+                        else if ($2 == TYPE_BOOL){
+                                SymbolEntry *entry=createSymbolEntry($3, constant, $5->value,true,0,$2, 1, 0, NULL, "");
+                                addEntryToTable(currTable, entry);
+                                insertQuad($5->name , NULL , "=" , $3 , 0);
+                        }
+                        else if ($2 == TYPE_CHAR){
+                                SymbolEntry *entry=createSymbolEntry($3, constant, $5->value,true,0,$2, 1, 0, NULL, "");
+                                addEntryToTable(currTable, entry);
+                                insertQuad($5->name , NULL , "=" , $3 , 0);
+                        }
+                        else if ($2 == TYPE_STRING){
+                                SymbolEntry *entry=createSymbolEntry($3, constant, $5->value,true,0,$2, 1, 0, NULL, "");
+                                addEntryToTable(currTable, entry);
+                                insertQuad($5->name , NULL , "=" , $3 , 0);
+                        }
+                }
+                else{
+                        printf("Error: Data Type Mismatch\n");
+                }
 
         }
         | unary_expression SEMICOLON                   
-        | data_type IDENTIFIER SEMICOLON      {printf("Data Type Identifier\n");
-        Node *node= createIDNode($2, scope,$1);
-
-        SymbolEntry* entry= createSymbolEntryWithDefaults($2, var,node->value,false,0,$1);
-        addEntryToTable(currTable, entry);
-        
-        
+        | data_type IDENTIFIER SEMICOLON      {
+                printf("Data Type Identifier\n");
+                union Value val;
+                SymbolEntry* entry= createSymbolEntryWithDefaults($2, var,val,false,0,$1); 
+                addEntryToTable(currTable, entry);
         }
-
         ;
 default_declaration:
-        data_type IDENTIFIER EQU expression SEMICOLON {  
+        data_type IDENTIFIER EQU expression_statement SEMICOLON {  
                 printf(" Default Declaration Data Type: %d data type el tanyyy %d\n", $1 , $4->dataType); 
                 if($1 == $4->dataType){
                         if ($1 == TYPE_INT){
@@ -236,11 +681,12 @@ default_declaration:
                                 addEntryToTable(currTable, entry);
                         }
                         else if ($1 == TYPE_CHAR){
-
+                                insertQuad($4->name , NULL , "=" , $2 , 0);
                                 SymbolEntry* entry= createSymbolEntryWithDefaults($2, var, $4->value,true,0, $1);
                                 addEntryToTable(currTable, entry);
                         }
                         else if ($1 == TYPE_STRING){
+                                insertQuad($4->name , NULL , "=" , $2 , 0);
                                 SymbolEntry* entry= createSymbolEntryWithDefaults($2, var, $4->value,true,0, $1);
                                 addEntryToTable(currTable, entry);
                         }
@@ -256,23 +702,12 @@ default_declaration:
         | assign_expression SEMICOLON           {printf("Assign Expression\n");}
         ;
 
-func_call:
-        IDENTIFIER LEFT_ROUND RIGHT_ROUND
-        | IDENTIFIER LEFT_ROUND func_call_parameter RIGHT_ROUND
-        ;
-
-expression:
-        INTEGER     {
-                        Node *node= createIntNode($1 , scope , tempCount , true);
-                        $$ = node; 
-                        printf("Integer: %d\n", $1);
-                }
-        | DOUBLE      { 
-                                Node *node= createDoubleNode($1, scope , tempCount , true);
-                                $$ = node;
-                                printf("Double: %f\n", $1);
-                        }
-        | CHAR          { 
+expression_statement:
+        expression {$$ = $1;}
+        | char_expression {$$ = $1;}
+        ; 
+char_expression:
+        CHAR            { 
                                 Node *node= createCharNode($1, scope , tempCount , true);
                                 $$ = node;
                                 printf("Char: %c\n", $1);
@@ -282,30 +717,40 @@ expression:
                                 $$ = node;
                                 printf("String: %s\n", $1);
                         }
+                ;
+
+expression:
+        INTEGER     {
+                        Node *node= createIntNode($1 , scope , tempCount , true);
+                        $$ = node; 
+                        printf("Integer: %d\n", $1);
+                }
+        | DOUBLE        {
+                                Node *node= createDoubleNode($1, scope , tempCount , true);
+                                $$ = node;
+                                printf("Double: %f\n", $1);
+                        }
         | IDENTIFIER {
-        SymbolEntry *entry = getentryfromalltables(currTable, $1);
-        printf("Identifier:%s intialized %d \n", $1 , entry->isInitialized ? 1 : 0);
-        if(entry != NULL && entry->isInitialized){
-                Node* node = createIDNode($1, scope, entry->type);
-                node->value = entry->value;
-                $$ = node;
-        }
-        else{
-                printf("Error: Variable not declared or intialized\n");
-        }
-        
+                SymbolEntry *entry = getentryfromalltables(currTable, $1);
+                if(entry != NULL && entry->isInitialized){
+                        printf("Identifier:%s intialized %d \n", $1 , entry->isInitialized ? 1 : 0);
+                        Node* node = createIDNode($1, scope, entry->type);
+                        node->value = entry->value;
+                        $$ = node;
+                }
+                else{
+                        printf("Error: Variable not declared or intialized\n");
+                }
+                
         }
         | BOOLEAN {
-
-     
-                        Node *node= createBoolNode($1, scope);
+                        Node *node= createBoolNode($1, scope , tempCount , true);
                         $$ = node;
                 
-
-}
+        }
  
        
-  | expression PLUS expression {
+        | expression PLUS expression {
         if ($1->dataType == $3->dataType){
                 if ($1->dataType == TYPE_INT){
                         tempCount++;
@@ -328,8 +773,27 @@ expression:
         }
 
      
-          }
-  | expression MINUS expression { 
+        }
+        | MINUS expression %prec PLUS { 
+                if($2->dataType == TYPE_INT)
+                {
+                        tempCount++;
+                        Node *node= createIntNode(-$2->value.iVal, scope , tempCount , false);
+                        insertQuad(NULL , $2->name , "-" , node->name , 0);
+                        $$ = node;
+                }
+                else if($2->dataType == TYPE_DOUBLE)
+                {
+                        tempCount++;
+                        Node *node= createDoubleNode(-$2->value.dVal, scope , tempCount , false);
+                        insertQuad(NULL , $2->name , "-" , node->name , 0);
+                        $$ = node;
+                }
+                else {
+                        printf("Error: ERROORR");
+                }
+        }
+        | expression MINUS expression { 
         if($1->dataType == $3->dataType)
         {
                 if($1->dataType == TYPE_INT)
@@ -354,8 +818,8 @@ expression:
         {
                 printf("Error: Data Type Mismatch\n");
         }
-   }
-  | expression MULT expression {     
+        }
+        | expression MULT expression {     
         if($1->dataType == $3->dataType)
         {
                 if($1->dataType == TYPE_INT)
@@ -381,8 +845,8 @@ expression:
                 printf("Error: Data Type Mismatch\n");
         }
 
- }
-  | expression DIV expression { 
+        }
+        | expression DIV expression { 
         if($1->dataType == $3->dataType )
         {
                 if($1->dataType == TYPE_INT && $3->value.iVal != 0)
@@ -408,8 +872,8 @@ expression:
                 printf("Error: Data Type Mismatch\n");
         }
         }
-  | LEFT_ROUND expression RIGHT_ROUND { $$ = $2; }
-  | func_call {printf("Function Call\n");}
+        | LEFT_ROUND expression RIGHT_ROUND { $$ = $2; }
+        | func_call {printf("Function Call BADRRRRRRRRRRRRR\n");}
 ;
 
 
@@ -438,7 +902,7 @@ unary_expression:
         IDENTIFIER INC {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
-                if(entry != NULL && entry->isInitialized && entry->kind != constant){
+                if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param) ){
                         if (entry->type == TYPE_INT){
                                 entry->value.iVal++;
                                 
@@ -451,8 +915,8 @@ unary_expression:
                                 printf("Error: Data Type Mismatch\n");
                         }
                         if(flag){
-                                SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
-                                modifyentry(currTable, entry->name , newEntry);
+                                // SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
+                                // modifyentry(currTable, entry->name , newEntry);
                                 insertQuad(NULL, NULL , "++" , $1 , 0);
                         }
                 }
@@ -463,8 +927,8 @@ unary_expression:
       | IDENTIFIER DEC {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
-                if(entry != NULL && entry->isInitialized && entry->kind != constant){
-                        if (entry->type == TYPE_INT){
+                if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param) ){
+                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
                                 entry->value.iVal--;
                         }
                         else if (entry->type == TYPE_DOUBLE){
@@ -475,8 +939,8 @@ unary_expression:
                                 flag = 0;
                         }
                         if(flag){
-                                SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
-                                modifyentry(currTable, entry->name , newEntry);
+                                // SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
+                                // modifyentry(currTable, entry->name , newEntry);
                                 insertQuad(NULL, NULL , "--" , $1 , 0);        
                         }
 
@@ -488,7 +952,7 @@ unary_expression:
       | INC IDENTIFIER {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $2);
-                if(entry != NULL && entry->isInitialized && entry->kind != constant){
+                if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param) ){
                         if (entry->type == TYPE_INT){
                                 entry->value.iVal++;
                         }
@@ -506,13 +970,13 @@ unary_expression:
                         }
                 }
                 else {
-                        printf("Error: Variable not declared\n");
+                        printf("Error: Variable not declared %d\n");
                 }
         }
       | DEC IDENTIFIER {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $2);
-                if(entry != NULL && entry->isInitialized && entry->kind != constant){
+                if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param)){
                         if (entry->type == TYPE_INT){
                                 entry->value.iVal--;
                         }
@@ -560,6 +1024,7 @@ assign_expression:
                 if(entry != NULL && entry->kind != constant){
                         if (entry->type == $3->dataType)
                         {
+                                int flage = 1;
                                 if($2 == "="){
                                         if (entry->type == TYPE_INT){
                                                 entry->value.iVal = $3->value.iVal;
@@ -633,10 +1098,14 @@ assign_expression:
                                 
                                 }
                                 else {
+                                        flage=0;
                                         printf("Error: Variable not declared\n");
                                 }
-                                SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
-                                modifyentry(currTable, entry->name , newEntry);
+                                if(flage)
+                                {
+                                        SymbolEntry *newEntry = createSymbolEntryWithDefaults(entry->name, entry->kind, entry->value,true, 0, entry->type);
+                                        modifyentry(currTable, entry->name , newEntry);
+                                }
                         }
                         else{
                                 printf("Error: Data Type Mismatch\n");
@@ -649,13 +1118,359 @@ assign_expression:
         ;        
 
 %%
+
+Node * checkValueNotEmpty(Node* node){
+        Node *boolNode;
+        if(node->dataType == TYPE_INT ){
+                if(node->value.iVal != 0){
+                        boolNode = createBoolNode(true, scope , tempCount , true);
+                }
+                else{
+                        boolNode = createBoolNode(false, scope, tempCount , true);
+                }
+        }
+        else if(node->dataType == TYPE_DOUBLE){
+                if(node->value.dVal != 0){
+                        boolNode = createBoolNode(true, scope, tempCount , true);
+                }
+                else{
+                        boolNode = createBoolNode(false, scope, tempCount , true);
+                }
+        }
+        else if(node->dataType == TYPE_CHAR){
+                if(node->value.cVal ){
+                        boolNode = createBoolNode(true, scope, tempCount , true);
+                }
+                else{
+                        boolNode = createBoolNode(false, scope , tempCount , true);
+                }
+        }
+        else if(node->dataType == TYPE_STRING){
+                if(node->value.strVal){
+                        boolNode = createBoolNode(true, scope, tempCount , true);
+                }
+                else{
+                        boolNode = createBoolNode(false, scope, tempCount , true);
+                }
+        }
+        return boolNode;
+}
+
+Node * handleConditionalExpression(Node * node){
+        Node * boolNode;
+        if(node->dataType == TYPE_BOOL){
+                return node;
+        }
+        else
+        {
+                if(node->nodeType == NODE_CONST){
+                        boolNode = checkValueNotEmpty(node);
+                }
+                else if (node->nodeType == NODE_ID)
+                {
+                        SymbolEntry *entry = getentryfromalltables(currTable, node->name);
+                        if(entry != NULL && entry->isInitialized){
+                                boolNode = checkValueNotEmpty(node);
+                                boolNode->name = node->name;
+                        }
+                        else{
+                                printf("Error: Variable not declared or intialized\n");
+                        }
+                }
+        }
+        return boolNode;
+}
+
+Node * handleConditionalComparison(Node* first , Node* second , char* oper){
+        Node * boolNode;
+        if(first->dataType == second->dataType) {
+                if(strcmp(oper, "==") == 0)
+                {   
+                        if(first->dataType == TYPE_INT)
+                        {
+                                if(first->value.iVal == second->value.iVal)
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(true, scope , tempCount , false);
+                                        insertQuad(first->name , second->name , "==" , boolNode->name , 0);
+                                }
+                                else
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(false, scope, tempCount , false);
+                                        insertQuad(first->name , second->name , "==" , boolNode->name , 0);
+                                }
+                        }
+                        else if(first->dataType == TYPE_DOUBLE)
+                        {
+                                if(first->value.dVal == second->value.dVal)
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(true, scope , tempCount , false);
+                                        insertQuad(first->name , second->name , "==" , boolNode->name , 0);
+                                }
+                                else
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(false, scope, tempCount , false);
+                                        insertQuad(first->name , second->name , "==" , boolNode->name , 0);
+                                }
+                        }
+                        else if(first->dataType == TYPE_CHAR)
+                        {
+                                if(strcmp(first->value.cVal, second->value.cVal) == 0)
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(true, scope, tempCount , false);
+                                }
+                                else
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(false, scope, tempCount , false);
+                                }
+                                insertQuad(first->name , second->name , "==" , boolNode->name , 0);
+                        }
+                        else if(first->dataType == TYPE_STRING)
+                        {
+                                if(strcmp(first->value.strVal, second->value.strVal) == 0)
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(true, scope, tempCount , false);
+                                }
+                                else
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(false, scope, tempCount , false);
+                                }
+                                insertQuad(first->name , second->name , "==" , boolNode->name , 0);
+                        }
+                        
+                }
+                else if(strcmp(oper, ">") == 0)
+                {
+                        if(first->dataType == TYPE_INT)
+                        {
+                                if(first->value.iVal > second->value.iVal)
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(true, scope, tempCount , false);
+                                }
+                                else
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(false, scope, tempCount , false);
+                                }
+                                insertQuad(first->name , second->name , ">" , boolNode->name , 0);
+                        }
+                        else if(first->dataType == TYPE_DOUBLE)
+                        {
+                                if(first->value.dVal > second->value.dVal)
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(true, scope, tempCount , false);
+                                }
+                                else
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(false, scope, tempCount , false);
+                                }
+                                insertQuad(first->name , second->name , ">" , boolNode->name , 0);
+                        }
+                }
+                else if(strcmp(oper, "<") == 0)
+                {
+                        if(first->dataType == TYPE_INT)
+                        {
+                                if(first->value.iVal < second->value.iVal)
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(true, scope, tempCount , false);
+                                }
+                                else
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(false, scope, tempCount , false);
+                                }
+                                insertQuad(first->name , second->name , "<" , boolNode->name , 0);
+                        }
+                        else if(first->dataType == TYPE_DOUBLE)
+                        {
+                                if(first->value.dVal < second->value.dVal)
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(true, scope, tempCount , false);
+                                }
+                                else
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(false, scope, tempCount , false);
+                                }
+                                insertQuad(first->name , second->name , "<" , boolNode->name , 0);
+                        }
+                }
+                else if(strcmp(oper, ">=") == 0){
+                        if(first->dataType == TYPE_INT)
+                        {
+                                if(first->value.iVal >= second->value.iVal)
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(true, scope, tempCount , false);
+                                }
+                                else
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(false, scope, tempCount , false);
+                                }
+                                insertQuad(first->name , second->name , ">=" , boolNode->name , 0);
+                        }
+                        else if(first->dataType == TYPE_DOUBLE)
+                        {
+                                if(first->value.dVal >= second->value.dVal)
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(true, scope, tempCount , false);
+                                }
+                                else
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(false, scope, tempCount , false);
+                                }
+                                insertQuad(first->name , second->name , ">=" , boolNode->name , 0);
+                        }
+                }
+                else if(strcmp(oper, "<=") == 0){
+                        if(first->dataType == TYPE_INT)
+                        {
+
+                                if(first->value.iVal <= second->value.iVal)
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(true, scope, tempCount , false);
+                                }
+                                else
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(false, scope, tempCount , false);
+                                }
+                                insertQuad(first->name , second->name , "<=" , boolNode->name , 0);
+                        }
+                        else if(first->dataType == TYPE_DOUBLE)
+                        {
+                                if(first->value.dVal <= second->value.dVal)
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(true, scope, tempCount , false);
+                                }
+                                else
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(false, scope, tempCount , false);
+                                }
+                                insertQuad(first->name , second->name , "<=" , boolNode->name , 0);
+                        }
+                }
+                else if(strcmp(oper, "!=") == 0){
+                        if(first->dataType == TYPE_INT)
+                        {
+                                if(first->value.iVal != second->value.iVal)
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(true, scope, tempCount , false);
+                                }
+                                else
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(false, scope, tempCount , false);
+                                }
+                                insertQuad(first->name , second->name , "!=" , boolNode->name , 0);
+                        }
+                        else if(first->dataType == TYPE_DOUBLE)
+                        {
+                                if(first->value.dVal != second->value.dVal)
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(true, scope, tempCount , false);
+                                }
+                                else
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(false, scope, tempCount , false);
+                                }
+                                insertQuad(first->name , second->name , "!=" , boolNode->name , 0);
+                        }
+                        else if(first->dataType == TYPE_CHAR)
+                        {
+                                if(strcmp(first->value.cVal, second->value.cVal) != 0)
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(true, scope, tempCount , false);
+                                }
+                                else
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(false, scope, tempCount , false);
+                                }
+                                insertQuad(first->name , second->name , "!=" , boolNode->name , 0);
+                        }
+                        else if(first->dataType == TYPE_STRING)
+                        {
+                                if(strcmp(first->value.strVal, second->value.strVal) != 0)
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(true, scope, tempCount , false);
+                                }
+                                else
+                                {
+                                        tempCount++;
+                                        boolNode = createBoolNode(false, scope, tempCount , false);
+                                }
+                                insertQuad(first->name , second->name , "!=" , boolNode->name , 0);
+                        }
+                }
+        }
+        return boolNode;
+}
+
+void handleFunctionParameters(SymbolEntry ** params , Node** nodes , int argCount){
+        for(int j = 0 ; j < argCount ; j++)
+        {
+             if(params[j]->type == nodes[j]->dataType){
+                        if(params[j]->type == TYPE_INT){
+                                insertQuad(nodes[j]->name , NULL , "=" , params[j]->name , 0);
+                        }
+                        else if(params[j]->type == TYPE_DOUBLE){
+                                insertQuad(nodes[j]->name , NULL , "=" , params[j]->name , 0);
+                        }
+                        else if(params[j]->type == TYPE_BOOL){
+                                insertQuad(nodes[j]->name , NULL , "=" , params[j]->name , 0);
+                        }
+                        else if(params[j]->type == TYPE_CHAR){
+                                insertQuad(nodes[j]->name , NULL , "=" , params[j]->name , 0);
+                        }
+                        else if(params[j]->type == TYPE_STRING){
+                                insertQuad(nodes[j]->name , NULL , "=" , params[j]->name , 0);
+                        }
+                }
+                else{
+                        printf("Error: Data Type Mismatch\n");
+                }
+        }
+}
+
+char *concatenateStrings(char *str1, char *str2){
+        char *result = malloc(strlen(str1) + strlen(str2) + 1);
+        strcpy(result, str1);
+        strcat(result, str2);
+        return result;
+}
+
 int yyerror(char *s) {
     fprintf(stderr, "Error:  %s %d\n", s , yylineno- 1);
     return 1;
 }
 
 int main(int argc, char **argv) {
-        
+        initialize();
     if (argc > 1) {
         yyin = fopen(argv[1], "r");
         // Print file name 
@@ -673,6 +1488,7 @@ int main(int argc, char **argv) {
         printf("Parsing successful\n");
         printTable(globalTable);
         printQuadrables();
+        QuadrablesToAssembly();
         return 0;
     } else {
         printf("Parsing failed\n");

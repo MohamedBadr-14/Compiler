@@ -17,6 +17,7 @@ enum OperationType
     Q_DIV,
     Q_LOGIC_AND,
     Q_LOGIC_OR,
+    Q_NOT,
     Q_EQ,
     Q_NE,
     Q_GE,
@@ -87,6 +88,10 @@ enum OperationType getOper(const char* opr)
     {
         return Q_LOGIC_OR;
     }
+    if (strcmp(opr, "!") == 0)
+    {
+        return Q_NOT;
+    }
     if (strcmp(opr, "JMP") == 0)
     {
         return Q_JMP;
@@ -119,8 +124,60 @@ enum OperationType getOper(const char* opr)
     {
         return Q_POP;
     }
+
     return -1; // Return an invalid operation type if no match is found
 }
+char * enumToString(enum OperationType op)
+{
+    switch (op)
+    {
+    case Q_Assign:
+        return "ASSIGN";
+    case Q_ADD:
+        return "PLUS";
+    case Q_SUB:
+        return "MINUS";
+    case Q_MUL:
+        return "MULTIPLY";
+    case Q_DIV:
+        return "DIVIDE";
+    case Q_LOGIC_AND:
+        return "AND";
+    case Q_LOGIC_OR:
+        return "OR";
+    case Q_NOT:
+        return "NOT";
+    case Q_EQ:
+        return "EQUAL";
+    case Q_NE:
+        return "NOT EQUAL";
+    case Q_GE:
+        return "GOR";
+    case Q_LE:
+        return "LOR";
+    case Q_GT:
+        return "GREATER";
+    case Q_LT:
+        return "LESS";
+    case Q_JZ:  
+        return "JZ";
+    case Q_JNZ:
+        return "JNZ";
+    case Q_JMP:
+        return "JMP";
+    case Q_LABEL:
+        return "LABEL";
+    case Q_INC:
+        return "INC";
+    case Q_DEC:
+        return "DEC";
+    case Q_PUSH:
+        return "PUSH";
+    case Q_POP:
+        return "POP";
+    }
+}
+
 
 typedef struct Quadruple
 {
@@ -159,77 +216,8 @@ void insertQuad(char *n1, char *n2, const char *opr, char *tempName, int endFor)
     }
 }
 
-void reArrange()
-{
-    Quadruple *curr = start;
-    Quadruple *tempHead = NULL;
-    Quadruple *temp = NULL;
-    Quadruple *last = NULL;
-
-    while (curr != NULL)
-    {
-        if (curr->endFor == 1)
-        {
-            Quadruple *newQuad = (Quadruple *)malloc(sizeof(Quadruple));
-            newQuad->Result = curr->Result;
-            newQuad->Src1 = curr->Src1;
-            newQuad->Src2 = curr->Src2;
-            newQuad->Operation = curr->Operation;
-            newQuad->endFor = curr->endFor;
-            newQuad->next = NULL;
-
-            if (tempHead == NULL)
-            {
-                tempHead = newQuad;
-            }
-            else
-            {
-                Quadruple *tempTail = tempHead;
-                while (tempTail->next != NULL)
-                {
-                    tempTail = tempTail->next;
-                }
-                tempTail->next = newQuad;
-            }
-        }
-        if (curr->next != NULL && curr->next->endFor == -1)
-        {
-            last = curr;
-        }
-        curr = curr->next;
-    }
-
-    curr = start;
-    while (curr->next != NULL)
-    {
-        if (curr->next->endFor == 1)
-        {
-            Quadruple *toDelete = curr->next;
-            curr->next = curr->next->next;
-            free(toDelete);
-        }
-        else
-        {
-            curr = curr->next;
-        }
-    }
-
-    if (tempHead != NULL)
-    {
-        Quadruple *last2 = last->next;
-        last->next = tempHead;
-        temp = tempHead;
-        while (temp->next != NULL)
-        {
-            temp = temp->next;
-        }
-        temp->next = last2;
-    }
-}
-
 void printQuadrables()
 {
-    // reArrange();
     myfile2 = fopen("testing.txt", "w");
     Quadruple *temp = start;
     while (temp != NULL)
@@ -239,6 +227,19 @@ void printQuadrables()
         temp = temp->next;
     }
     fclose(myfile2);
+}
+
+void QuadrablesToAssembly()
+{
+    myfile2 = fopen("assembly.txt", "w");
+    Quadruple *temp = start;
+    fprintf(myfile2, "OPR   SRC1    SRC2    DEST   \n");
+    while (temp != NULL)
+    {
+        // printf("result = %s , src1 = %s , src2 = %s opr = %s  forend = %d\n", temp->Result, temp->Src1, temp->Src2, enumToString(temp->Operation));
+        fprintf(myfile2, "%s    %s  %s  %s \n", enumToString(temp->Operation), temp->Src1, temp->Src2, temp->Result);
+        temp = temp->next;
+    }
 }
 
 #endif // __QUAD_H_

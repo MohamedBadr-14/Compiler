@@ -155,7 +155,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 28 "parser.y"
+#line 65 "parser.y"
 
     Node* node;
     int ival;    // Integer values

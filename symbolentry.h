@@ -11,22 +11,21 @@ enum SymbolKind
     param,    //int par
 };
 
+typedef struct SymbolEntry SymbolEntry;
 
-typedef struct {
+struct SymbolEntry {
     char *name;
-    enum SymbolKind kind;    
+    enum SymbolKind kind;
     union Value value; // value of var
     bool isInitialized;
-      
-
-    enum DataType type;             // type of var
+    enum DataType type; // type of var
     int isConstant;
-
+    SymbolEntry **parameters; // parameters of function
     int argCount;
-    char **argTypes; 
-    char *returnType;      
-    int lineNo;  
-} SymbolEntry;
+    char **argTypes;
+    char *returnType;
+    int lineNo;
+};
 
 // 
 
@@ -56,10 +55,18 @@ SymbolEntry *createSymbolEntry(char *name, enum SymbolKind kind,union Value  v ,
         printf("bool   ksdmklfmsdk\n");
         entry->value.bVal = v.bVal;
     }
-  
+    
 
     entry->name = strdup(name);
     entry->kind = kind;
+    if (kind == func)
+    {
+        entry->parameters = (SymbolEntry **)malloc(0);
+    }
+    else
+    {
+        entry->parameters = NULL;
+    }
     entry->lineNo = lineNo;
     entry->type = type;
     entry->isInitialized = initial;
@@ -87,6 +94,31 @@ void destroyentry(SymbolEntry *entry) {
 
         free(entry);
     }
+}
+void addparam(SymbolEntry *funcEntry, SymbolEntry *paramEntry) {
+    if (funcEntry == NULL || paramEntry == NULL) {
+        fprintf(stderr, "Error: Null pointer passed to addparam.\n");
+        return;
+    }
+
+    // Allocate/Reallocate memory for the parameters array
+    funcEntry->parameters = (SymbolEntry **)realloc(
+        funcEntry->parameters, 
+        (funcEntry->argCount + 1) * sizeof(SymbolEntry *)
+    );
+    
+    if (funcEntry->parameters == NULL) {
+        fprintf(stderr, "Error: Memory allocation failed in addparam.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Add the new parameter to the array
+    funcEntry->parameters[funcEntry->argCount] = paramEntry;
+
+    // Increment the parameter count
+    funcEntry->argCount++;
+
+    printf("Parameter added. argCount = %d\n", funcEntry->argCount);
 }
 
 #endif

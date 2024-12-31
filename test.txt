@@ -1,4 +1,13 @@
-int x = 5 * 3 / 4 * 8;
-int y = 3;
-x/=y*1;
-y++;
+int x = 2;
+int xee(int x , int z , bool y)
+{
+    x = 3;
+}
+
+int y = 2;
+
+bool zee(double z , int y){
+    y++;
+}
+
+x = xee(y , 1 , true);

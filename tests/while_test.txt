@@ -1,0 +1,11 @@
+int x = 10;
+while(x){
+    while(x)
+    {
+        x++;
+        while(x){
+        x++;
+        }         
+    }
+    x++;
+}

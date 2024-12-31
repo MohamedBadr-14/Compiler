@@ -14,11 +14,15 @@ enum DataType
     TYPE_BOOL,
     TYPE_STRING,
 };
-     union Value {
-        int iVal; 
-        double dVal; 
-        bool bVal;
-        char * cVal; 
-        
-        char *strVal;
-    };
+enum NodeType{
+    NODE_ID,
+    NODE_CONST
+};
+union Value {
+    int iVal; 
+    double dVal; 
+    bool bVal;
+    char * cVal; 
+
+    char *strVal;
+};

@@ -53,6 +53,7 @@ SymbolEntry * getentryfromalltables(SymbolTable *table, char *name)
     SymbolEntry *entry = NULL;
     while (table != NULL)
     {
+        printf("table name %s\n",table->name);
         for (int i = 0; i < table->size; i++)
         {
             if (strcmp(table->entries[i]->name, name) == 0)
@@ -63,6 +64,7 @@ SymbolEntry * getentryfromalltables(SymbolTable *table, char *name)
         }
         table = table->parent;
     }
+    printf("RAGE3 entryyy : %d\n" , entry==NULL ? 1 : 0);
     return entry;
 }
 
@@ -120,27 +122,39 @@ void printTable(SymbolTable *table)
     {
         printf("Table: %s\n", table->name);
         for (int i = 0; i < table->size; i++)
-
+        
         {
+            if(table->entries[i]->kind == func)
+            {
+                // loop on params to print
+                printf("nammmmmmmmmmmmmmmmmmmmmmmmmmmmmm\n");
+                printf("Name: %s, Type: %d, Value: %d type: %d\n", table->entries[i]->name, table->entries[i]->type, table->entries[i]->value.iVal, table->entries[i]->kind);
+                for(int j = 0 ; j < table->entries[i]->argCount ; j++)
+                {
+                    printf("Name: %s, Type: %d, Value: %d type: %d\n", table->entries[i]->parameters[j]->name, table->entries[i]->parameters[j]->type, table->entries[i]->parameters[j]->value.iVal, table->entries[i]->parameters[j]->kind);
+                }
+                printf("afallllllllllllllllllllllllllllllllllllllllllllllllllt)\n");
+            }
+
             if (table->entries[i]->type == TYPE_INT)
             {
-                printf("Name: %s, Type: int, Value: %d\n", table->entries[i]->name, table->entries[i]->value.iVal);
+                printf("Name: %s, Type: int, Value: %d type: %d\n", table->entries[i]->name, table->entries[i]->value.iVal, table->entries[i]->kind);
             }
             else if (table->entries[i]->type == TYPE_DOUBLE)
             {
-                printf("Name: %s, Type: double, Value: %f\n", table->entries[i]->name, table->entries[i]->value.dVal);
+                printf("Name: %s, Type: double, Value: %f type: %d\\n", table->entries[i]->name, table->entries[i]->value.dVal , table->entries[i]->kind);
             }
             else if (table->entries[i]->type == TYPE_CHAR)
             {
-                printf("Name: %s, Type: char, Value: %s\n", table->entries[i]->name, table->entries[i]->value.cVal);
+                printf("Name: %s, Type: char, Value: %s type: %d\\n", table->entries[i]->name, table->entries[i]->value.cVal , table->entries[i]->kind);
             }
             else if (table->entries[i]->type == TYPE_STRING)
             {
-                printf("Name: %s, Type: string, Value: %s\n", table->entries[i]->name, table->entries[i]->value.strVal);
+                printf("Name: %s, Type: string, Value: %s type: %d\\n", table->entries[i]->name, table->entries[i]->value.strVal , table->entries[i]->kind);
             }
             else if (table->entries[i]->type == TYPE_BOOL)
             {
-                printf("Name: %s, Type: bool, Value: %s\n", table->entries[i]->name, table->entries[i]->value.bVal? "true" : "false");
+                printf("Name: %s, Type: bool, Value: %s type: %d\\n", table->entries[i]->name, table->entries[i]->value.bVal? "true" : "false" , table->entries[i]->kind);
             }
         }
         for (int i = 0; i < table->childCount; i++)
