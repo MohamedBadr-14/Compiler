@@ -178,9 +178,13 @@ void printTable(SymbolTable *table , bool inside_file)
     }
 }
 
-void printUnusedVariables(SymbolTable *table)
+void printUnusedVariables(SymbolTable *table, bool inside_file)
 {
-    FILE* unused_variables = fopen("unused_variables.txt", "a");
+    FILE* unused_variables;
+    if (inside_file)
+        unused_variables = fopen("unused_variables.txt", "a");
+    else unused_variables = fopen("unused_variables.txt", "w");
+
     if (table != NULL)
     {
         for (int i = 0; i < table->size; i++)
@@ -191,7 +195,7 @@ void printUnusedVariables(SymbolTable *table)
             }
         }
         for (int i = 0; i < table->childCount; i++)
-            printUnusedVariables(table->children[i]);
+            printUnusedVariables(table->children[i], true);
     }
     fclose(unused_variables);
 }

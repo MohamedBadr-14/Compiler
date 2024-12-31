@@ -1366,8 +1366,8 @@ int main(int argc, char **argv) {
 
     if (yyparse() == 0) {
         printf("Parsing successful\n");
-        printTable(globalTable , false);
-        printUnusedVariables(globalTable);
+        printTable(globalTable, false);
+        printUnusedVariables(globalTable, false);
         printQuadrables();
         QuadrablesToAssembly();
         return 0;
