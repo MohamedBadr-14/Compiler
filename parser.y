@@ -11,6 +11,10 @@
 
 
 extern int yylineno;
+const char* filename;
+int first_sem_err = 1;
+int first_syn_err = 1;
+
 int yylex(void);
 int yyerror(char *s);
 //read from text file
@@ -35,6 +39,22 @@ void initialize() {
         initializeStack(&switchStack);
         params = (Node **)malloc(0);
 }
+
+void logError(const char *message, int line_num) {
+        FILE *errorFile;
+        if (first_sem_err) {
+                errorFile = fopen("semantic_errors.txt", "w");
+                fprintf(errorFile, "%s: Error at line %d: %s\n", filename, line_num, message);
+                first_sem_err = 0;
+        } else {
+                errorFile = fopen("semantic_errors.txt", "a");
+                fprintf(errorFile, "%s: Error at line %d: %s\n", filename, line_num, message);
+        }
+        fclose(errorFile);
+        fprintf(stderr, "%s: Error at line %d: %s\n", filename, line_num, message);
+        //     exit(-1);
+}
+
 //FUNCTIONS
 Node * handleConditionalExpression(Node * node);
 Node * handleConditionalComparison(Node * first , Node * second , char* operand);
@@ -253,13 +273,10 @@ func_statement:
                                 char* start = concatenateStrings( $1->name, "_START");
                                 insertQuad(NULL , NULL , "LABEL" , start , 0);
                         }
-                        else{
-                                printf("Error: Function is with parameters\n");
-                        }
+                        else logError("Function is with parameters.", yylineno);
                 }
-                else{
-                        printf("Error: Function not declared\n");
-                }
+                else logError("Function is not declared.", yylineno);
+
         } statement {
                 SymbolEntry *entry = getentryfromalltables(currTable, $1->name);
                 if(entry != NULL && entry->kind == func){
@@ -276,9 +293,7 @@ func_statement:
                                 char* start = concatenateStrings( $1->name, "_START");
                                 insertQuad(NULL , NULL , "LABEL" , start , 0);
                 }
-                else{
-                        printf("Error: Function not declared\n");
-                }
+                else logError("Function is not declared.", yylineno);
         
         }statement end_scope  {
                 SymbolEntry *entry = getentryfromalltables(currTable, $1->name);
@@ -336,13 +351,9 @@ func_call:
                                 $$ = node;
 
                         }
-                        else{
-                                printf("Error: Function is with parameters\n");
-                        }
+                        else logError("Function is with parameters.", yylineno);
                 }
-                else{
-                        printf("Error: Function not declared\n");
-                }
+                else logError("Function is not declared.", yylineno);
         }
         | IDENTIFIER LEFT_ROUND func_call_parameter RIGHT_ROUND {
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
@@ -358,13 +369,9 @@ func_call:
                                 paramCount = 0;
                                 $$ = node;
                         }
-                        else{
-                                printf("Error: Function is with parameters %d\n" , entry->argCount);
-                        }
+                        else logError("Function is with parameters.", yylineno);
                 }
-                else{
-                        printf("Error: Function not declared\n");
-                }
+                else logError("Function is not declared.", yylineno);
         }
         ;
 do_while_stmt: conditional_if {
@@ -493,13 +500,9 @@ condition_only:
                                 printf("LESS THAN %d\n" , boolNode->value.bVal ? 1:0);
                                 $$ = boolNode;
                         }
-                        else{
-                                printf("Error: MOSHKELA\n");
-                        }
+                        else logError("", yylineno);
                 }
-                else{
-                        printf("Error: Data Type Mismatch\n");
-                }
+                else logError("Data type mismatch.", yylineno);
         }
         | expression GT expression      {
                 if($1->dataType == $3->dataType)
@@ -509,13 +512,9 @@ condition_only:
                                 printf("Greater THAN %d\n" , boolNode->value.bVal ? 1:0);
                                 $$ = boolNode;
                         }
-                        else{
-                                printf("Error: MOSHKELA\n");
-                        }
+                        else logError("", yylineno);
                 }
-                else {
-                        printf("Error: Data Type Mismatch\n");
-                }
+                else logError("Data type mismatch.", yylineno);
         }
         | expression LTE expression {
                 if($1->dataType == $3->dataType)
@@ -525,13 +524,9 @@ condition_only:
                                 printf("LESS THAN or equal %d\n" , boolNode->value.bVal ? 1:0);
                                 $$ = boolNode;
                         }
-                        else{
-                                printf("Error: MOSHKELA\n");
-                        }
+                        else logError("", yylineno);
                 }
-                else {
-                        printf("Error: Data Type Mismatch\n");
-                }
+                else logError("Data type mismatch.", yylineno);
         }
         | expression GTE expression {
                 if($1->dataType == $3->dataType)
@@ -541,13 +536,9 @@ condition_only:
                                 printf("greater THAN equal %d\n" , boolNode->value.bVal ? 1:0);
                                 $$ = boolNode;
                         }
-                        else{
-                                printf("Error: MOSHKELA\n");
-                        }
+                        else logError("", yylineno);
                 }
-                else {
-                        printf("Error: Data Type Mismatch\n");
-                }
+                else logError("Data type mismatch.", yylineno);
         }
         | expression EQ expression {
                 if($1->dataType == $3->dataType)
@@ -557,13 +548,9 @@ condition_only:
                                 printf("equal  %d\n" , boolNode->value.bVal ? 1:0);
                                 $$ = boolNode;
                         }
-                        else{
-                                printf("Error: MOSHKELA\n");
-                        }
+                        else logError("", yylineno);
                 }
-                else {
-                        printf("Error: Data Type Mismatch\n");
-                }
+                else logError("Data type mismatch.", yylineno);
         }
         | expression NEQ expression {
                if($1->dataType == $3->dataType)
@@ -573,13 +560,9 @@ condition_only:
                                 $$ = boolNode;
                                 printf("not equal %d\n" , boolNode->value.bVal ? 1:0);
                         }
-                        else{
-                                printf("Error: MOSHKELA\n");
-                        }
+                        else logError("", yylineno);
                 }
-                else {
-                        printf("Error: Data Type Mismatch\n");
-                }
+                else logError("Data type mismatch.", yylineno);
         }
         | LEFT_ROUND condition_only RIGHT_ROUND {$$ = $2;}
         | BOOL {
@@ -604,13 +587,9 @@ conditional_expression:
                         printf("3azeemm %d\n" , boolNode->value.bVal ? 1:0);
                         $$ = boolNode;
                 }
-                else{
-                        printf("Error: MOSHKELA\n");
+                else logError("", yylineno);
                 }
-                }
-                else {
-                        printf("GHALATTTTTT\n");
-                }
+                else logError("", yylineno);
         }
         | condition_only {$$=$1;}
         | NOT conditional_expression {
@@ -653,13 +632,9 @@ special_declaration:
                                         insertQuad($5->name , NULL , "=" , $3 , 0);
                                 }
                         }
-                        else{
-                                printf("Error: Data Type Mismatch\n");
-                        }
+                        else logError("Data type mismatch.", yylineno);
                 }
-                else {
-                        printf("Error: Varibale already declared\n");
-                }
+                else logError("Variable is already declared.", yylineno);
 
         }
         | unary_expression SEMICOLON                   
@@ -672,9 +647,7 @@ special_declaration:
                         SymbolEntry* entry= createSymbolEntryWithDefaults($2, var,val,false,0,$1); 
                         addEntryToTable(currTable, entry);
                 }
-                else{
-                        printf("ERROR: VARIABLE ALREADY DECLARED\n");
-                }
+                else logError("Variable is already declared.", yylineno);
         }
         ;
 default_declaration:
@@ -714,13 +687,9 @@ default_declaration:
 
                     
                 }
-                else{
-                        printf("Error: Data Type Mismatch\n");
+                else logError("Data type mismatch.", yylineno);
                 }
-                }
-                else {
-                        printf("Error: Variable already declared\n");
-                }
+                else logError("Variable is already declared.", yylineno);
 
             
             }
@@ -763,9 +732,7 @@ expression:
                         node->value = entry->value;
                         $$ = node;
                 }
-                else{
-                        printf("Error: Variable not declared or intialized\n");
-                }
+                else logError("Variable is undeclared or uninitialized.", yylineno);
                 
         }
         | BOOLEAN {
@@ -789,13 +756,9 @@ expression:
                         insertQuad($1->name , $3->name , "+" , node->name , 0);
                         $$ = node;
                 }
-                else{
-                        printf("Error: ERROORR");
-                }
+                else logError("Only int and double values can use this operator.", yylineno);
         }
-        else{
-                printf("Error: Data Type Mismatch\n");
-        }
+        else logError("Data type mismatch.", yylineno);
 
      
         }
@@ -814,9 +777,7 @@ expression:
                         insertQuad(NULL , $2->name , "-" , node->name , 0);
                         $$ = node;
                 }
-                else {
-                        printf("Error: ERROORR");
-                }
+                else logError("Only int and double values can use this operator.", yylineno);
         }
         | expression MINUS expression { 
         if($1->dataType == $3->dataType)
@@ -835,14 +796,9 @@ expression:
                         insertQuad($1->name , $3->name , "-" , node->name , 0);
                         $$ = node;
                 }
-                else {
-                        printf("Error: ERROORR");
-                }
+                else logError("Only int and double values can use this operator.", yylineno);
         }
-        else
-        {
-                printf("Error: Data Type Mismatch\n");
-        }
+        else logError("Data type mismatch.", yylineno);
         }
         | expression MULT expression {     
         if($1->dataType == $3->dataType)
@@ -861,41 +817,33 @@ expression:
                         insertQuad($1->name , $3->name , "*" , node->name , 0);
                         $$ = node;
                 }
-                else {
-                        printf("Error: ERROORR");
-                }
+                else logError("Only int and double values can use this operator.", yylineno);
         }
-        else
-        {
-                printf("Error: Data Type Mismatch\n");
-        }
+        else logError("Data type mismatch.", yylineno);
 
         }
         | expression DIV expression { 
         if($1->dataType == $3->dataType )
         {
-                if($1->dataType == TYPE_INT && $3->value.iVal != 0)
+                if($1->dataType == TYPE_INT)
                 {
+                        if ($3->value.iVal == 0) logError("Division by zero.", yylineno);
                         tempCount++;
                         Node *node= createIntNode($1->value.iVal/ $3->value.iVal, scope, tempCount , false);
                         insertQuad($1->name , $3->name , "/" , node->name , 0);
                         $$ = node;
                 }
-                else if($1->dataType == TYPE_DOUBLE && $3->value.dVal != 0)
+                else if($1->dataType == TYPE_DOUBLE)
                 {
+                        if ($3->value.dVal == 0) logError("Division by zero.", yylineno);
                         tempCount++;
                         Node *node= createDoubleNode($1->value.dVal/ $3->value.dVal, scope , tempCount , false);
                         insertQuad($1->name , $3->name , "/" , node->name , 0);
                         $$ = node;
                 }
-                else {
-                        printf("Error: ERROORR");
-                }
+                else logError("Only int and double values can use this operator.", yylineno);
         }
-        else
-        {
-                printf("Error: Data Type Mismatch\n");
-        }
+        else logError("Data type mismatch.", yylineno);
         }
         | LEFT_ROUND expression RIGHT_ROUND { $$ = $2; }
         | func_call {$$ = $1;}
@@ -927,52 +875,59 @@ unary_expression:
         IDENTIFIER INC {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
-                if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param) ){
-                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
-                                insertQuad(NULL, NULL , "++" , $1 , 0);
-                        }
+                if(entry != NULL && entry->kind == param) {
+                        if (entry->kind != constant) {
+                                if (entry->isInitialized) {
+                                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
+                                                insertQuad(NULL, NULL , "++" , $1 , 0);
+                                        } else logError("Only int and double values can use this operator.", yylineno);
+                                } else logError("Variable is uninitialized.", yylineno);
+                        } else logError("Cannot modify constants.", yylineno);
                 }
-                else {
-                        printf("Error: Variable not declared and constanttttt\n");
-                }
+                else logError("Variable is undeclared.", yylineno);
         }
       | IDENTIFIER DEC {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
-                if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param) ){
-                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
-                               insertQuad(NULL, NULL , "--" , $1 , 0);        
-                        }
+                if(entry != NULL && entry->kind == param) {
+                        if (entry->kind != constant) {
+                                if (entry->isInitialized) {
+                                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
+                                        insertQuad(NULL, NULL , "--" , $1 , 0);        
+                                        } else logError("Only int and double values can use this operator.", yylineno);
+                                } else logError("Variable is uninitialized.", yylineno);
+                        } else logError("Cannot modify constants.", yylineno);
 
-                }
-                else {
-                        printf("Error: Variable not declared\n");
-                }
+                } else logError("Variable is undeclared.", yylineno);
         }
       | INC IDENTIFIER {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $2);
-                if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param) ){
-                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){                    
-                                insertQuad(NULL, NULL , "++" , $2 , 0);
-                        }
+                if(entry != NULL && entry->kind == param) {
+                        if (entry->kind != constant) {
+                                if (entry->isInitialized) {
+                                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){                    
+                                                insertQuad(NULL, NULL , "++" , $2 , 0);
+                                        } else logError("Only int and double values can use this operator.", yylineno);
+                                } else logError("Variable is uninitialized.", yylineno);
+                        } else logError("Cannot modify constants.", yylineno);
                 }
-                else {
-                        printf("Error: Variable not declared %d\n");
-                }
+                else logError("Variable is undeclared.", yylineno);
         }
       | DEC IDENTIFIER {
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $2);
-                if(entry != NULL && ((entry->isInitialized && entry->kind != constant) || entry->kind == param)){
-                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
-                                insertQuad(NULL, NULL , "--" , $2 , 0);
-                        }
+                if(entry != NULL && entry->kind == param){
+                        if (entry->kind != constant) {
+                                if (entry->isInitialized) {
+                                        if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
+                                                insertQuad(NULL, NULL , "--" , $2 , 0);
+                                        } else logError("Only int and double values can use this operator.", yylineno);
+                                } else logError("Variable is uninitialized.", yylineno);
+                        } else logError("Cannot modify constants.", yylineno);
                         
                 }
-                else {
-                        printf("Error: Variable not declared\n");
-                }
+                else logError("Variable is undeclared.", yylineno);
         }
       ;
 
@@ -997,42 +952,39 @@ assign_operation:
 assign_expression:
         IDENTIFIER assign_operation expression {
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
-                if(entry != NULL && entry->kind != constant){
-                        if (entry->type == $3->dataType)
-                        {
-                                int flage = 1;
-                                if($2 == "="){
-                                        insertQuad($3->name , NULL , "=" , $1 , 0);
-                               
-                                }           
-                                else if($2 == "+=" && entry->isInitialized){
-                                        insertQuad($1,$3->name  , "+" , $1 , 0);
-                               
-                                }
-                                else if($2 == "-=" && entry->isInitialized){
-                                        insertQuad( $1 ,$3->name  , "-" , $1 , 0);
+                if(entry != NULL) {
+                        if (entry->kind != constant) {
+                                if (entry->type == $3->dataType)
+                                {
+                                        int flage = 1;
+                                        if($2 == "="){
+                                                insertQuad($3->name , NULL , "=" , $1 , 0);
                                 
-                                }
-                                else if($2 == "*=" && entry->isInitialized){
-                                        insertQuad($1 , $3->name  , "*" , $1 , 0);
+                                        }           
+                                        else if($2 == "+=" && entry->isInitialized){
+                                                insertQuad($1,$3->name  , "+" , $1 , 0);
                                 
-                                }
-                                else if($2 == "/=" && entry->isInitialized){
-                                        insertQuad($1 , $3->name  , "/" , $1 , 0);
-                                }
-                                else {
-                                        flage=0;
-                                        printf("Error: Variable not declared\n");
-                                }
-                        }
-                        else{
-                                printf("Error: Data Type Mismatch\n");
-                        }
-                }
-                else {
-                        printf("Error: Variable not declared ezay geet hena\n");
-                }
-                }
+                                        }
+                                        else if($2 == "-=" && entry->isInitialized){
+                                                insertQuad( $1 ,$3->name  , "-" , $1 , 0);
+                                        
+                                        }
+                                        else if($2 == "*=" && entry->isInitialized){
+                                                insertQuad($1 , $3->name  , "*" , $1 , 0);
+                                        
+                                        }
+                                        else if($2 == "/=" && entry->isInitialized){
+                                                insertQuad($1 , $3->name  , "/" , $1 , 0);
+                                        }
+                                        else {
+                                                flage=0;
+                                                logError("Variable is uninitialized.", yylineno);
+                                        }
+                                } else logError("Data type mismatch.", yylineno);
+
+                        } else logError("Cannot modify constants.", yylineno);
+                } else logError("Variable is undeclared.", yylineno);
+        }
         ;        
 
 %%
@@ -1087,13 +1039,13 @@ Node * handleConditionalExpression(Node * node){
                 else if (node->nodeType == NODE_ID)
                 {
                         SymbolEntry *entry = getentryfromalltables(currTable, node->name);
-                        if(entry != NULL && entry->isInitialized){
-                                boolNode = checkValueNotEmpty(node);
-                                boolNode->name = node->name;
-                        }
-                        else{
-                                printf("Error: Variable not declared or intialized\n");
-                        }
+                        if(entry != NULL){
+                                if (entry->isInitialized) {
+                                        boolNode = checkValueNotEmpty(node);
+                                        boolNode->name = node->name;
+                                } else logError("Variable is uninitialized.", yylineno);
+
+                        } else logError("Variable is undeclared.", yylineno);
                 }
         }
         return boolNode;
@@ -1369,9 +1321,7 @@ void handleFunctionParameters(SymbolEntry ** params , Node** nodes , int argCoun
                                 insertQuad(nodes[j]->name , NULL , "=" , params[j]->name , 0);
                         }
                 }
-                else{
-                        printf("Error: Data Type Mismatch\n");
-                }
+                else logError("Data type mismatch.", yylineno);
         }
 }
 
@@ -1383,8 +1333,17 @@ char *concatenateStrings(char *str1, char *str2){
 }
 
 int yyerror(char *s) {
-    fprintf(stderr, "Error:  %s %d\n", s , yylineno- 1);
-    return 1;
+        FILE* syntaxErrorFile;
+        if (first_syn_err == 1) {
+                syntaxErrorFile = fopen("syntax_errors.txt", "w");
+                fprintf(syntaxErrorFile, "%s: %s at line %d\n", filename, s, yylineno);
+                first_syn_err = 0;
+        } else {
+                syntaxErrorFile = fopen("syntax_errors.txt", "a");
+                fprintf(syntaxErrorFile, "%s: %s at line %d\n", filename, s , yylineno);
+        }
+        fprintf(stderr, "%s %d\n", s , yylineno);
+        return 1;
 }
 
 int main(int argc, char **argv) {
@@ -1392,7 +1351,8 @@ int main(int argc, char **argv) {
     if (argc > 1) {
         yyin = fopen(argv[1], "r");
         // Print file name 
-        printf("File name: %s\n", argv[1]);
+        filename = argv[1];
+        printf("File name: %s\n", filename);
         if (!yyin) {
             perror("Error opening file");
             return 1;
