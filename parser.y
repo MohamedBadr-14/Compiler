@@ -876,6 +876,7 @@ unary_expression:
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
                 if(entry != NULL && entry->kind == param) {
+                        entry->used = 1;
                         if (entry->kind != constant) {
                                 if (entry->isInitialized) {
                                         if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
@@ -890,6 +891,7 @@ unary_expression:
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
                 if(entry != NULL && entry->kind == param) {
+                        entry->used = 1;
                         if (entry->kind != constant) {
                                 if (entry->isInitialized) {
                                         if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
@@ -904,6 +906,7 @@ unary_expression:
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $2);
                 if(entry != NULL && entry->kind == param) {
+                        entry->used = 1;
                         if (entry->kind != constant) {
                                 if (entry->isInitialized) {
                                         if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){                    
@@ -918,6 +921,7 @@ unary_expression:
                 int flag = 1;
                 SymbolEntry *entry = getentryfromalltables(currTable, $2);
                 if(entry != NULL && entry->kind == param){
+                        entry->used = 1;
                         if (entry->kind != constant) {
                                 if (entry->isInitialized) {
                                         if (entry->type == TYPE_INT || entry->type == TYPE_DOUBLE){
@@ -953,6 +957,7 @@ assign_expression:
         IDENTIFIER assign_operation expression {
                 SymbolEntry *entry = getentryfromalltables(currTable, $1);
                 if(entry != NULL) {
+                        entry->used = 1;
                         if (entry->kind != constant) {
                                 if (entry->type == $3->dataType)
                                 {
@@ -1365,6 +1370,7 @@ int main(int argc, char **argv) {
     if (yyparse() == 0) {
         printf("Parsing successful\n");
         printTable(globalTable , false);
+        printUnusedVariables(globalTable);
         printQuadrables();
         QuadrablesToAssembly();
         return 0;

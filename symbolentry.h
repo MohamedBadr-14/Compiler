@@ -25,6 +25,7 @@ struct SymbolEntry {
     char **argTypes;
     char *returnType;
     int lineNo;
+    int used;
 };
 
 // 
@@ -74,6 +75,7 @@ SymbolEntry *createSymbolEntry(char *name, enum SymbolKind kind,union Value  v ,
     entry->argCount = argCount;
     entry->argTypes = argTypes;
     entry->returnType = returnType ? strdup(returnType) : NULL;
+    entry->used = 0;
     return entry;
 }
 

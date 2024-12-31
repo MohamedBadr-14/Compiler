@@ -10,7 +10,6 @@
 #include "symbolentry.h"
 typedef struct SymbolTable SymbolTable;
 
-
 struct SymbolTable {
     char *name;
     int scope;
@@ -177,6 +176,23 @@ void printTable(SymbolTable *table , bool inside_file)
             printTable(table->children[i] , true);
         }
     }
+}
+
+void printUnusedVariables(SymbolTable *table)
+{
+    FILE* unused_variables = fopen("unused_variables.txt", "a");
+    if (table != NULL)
+    {
+        for (int i = 0; i < table->size; i++)
+        {
+            if (table->entries[i]->used == 0)
+                printf("Variable: %s is not used.\n", table->entries[i]->name);
+                fprintf(unused_variables, "Variable: %s is not used.\n", table->entries[i]->name);
+        }
+        for (int i = 0; i < table->childCount; i++)
+            printUnusedVariables(table->children[i]);
+    }
+    fclose(unused_variables);
 }
 
 
