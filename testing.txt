@@ -1,7 +1,0 @@
-result = i , src1 =  0 , src2 = # opr = 0  forend = 0
-result = F1 , src1 = # , src2 = # opr = 17  forend = 0
-result = t1 , src1 = i , src2 =  5 opr = 13  forend = 0
-result = F2 , src1 = t1 , src2 = # opr = 14  forend = 0
-result = i , src1 = # , src2 = # opr = 18  forend = 0
-result = F1 , src1 = # , src2 = # opr = 16  forend = 0
-result = F2 , src1 = # , src2 = # opr = 17  forend = 0
